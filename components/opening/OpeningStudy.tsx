@@ -18,6 +18,8 @@ interface OpeningStudyData {
 
 interface OpeningStudyProps {
   opening: string;
+  variation?: string;
+  eco?: string;
 }
 
 const openingData: Record<string, OpeningStudyData> = {
@@ -284,6 +286,8 @@ const openingData: Record<string, OpeningStudyData> = {
 
 export default function OpeningStudy({
   opening,
+  variation,
+  eco,
 }: OpeningStudyProps) {
   const data = openingData[opening];
 
@@ -313,9 +317,19 @@ export default function OpeningStudy({
           Opening study
         </p>
 
-        <h2 className="mt-2 text-3xl font-semibold">
-          {data.name}
-        </h2>
+       <div className="mt-3 flex flex-wrap gap-2">
+  {variation && variation !== "—" && (
+    <span className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-300">
+      {variation}
+    </span>
+  )}
+
+  {eco && eco !== "—" && (
+    <span className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-500">
+      ECO {eco}
+    </span>
+  )}
+</div>
 
         <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
           {data.description}

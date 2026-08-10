@@ -45,18 +45,24 @@ export default function AnalyzePage() {
           <PGNImporter onLoadGame={handleLoadGame} />
 
           {gameSummary && (
-            <GameSummary
-              white={gameSummary.white}
-              black={gameSummary.black}
-              result={gameSummary.result}
-              event={gameSummary.event}
-              date={gameSummary.date}
-              moveCount={gameSummary.moveCount}
-              opening={gameSummary.opening}
-            />
+           <GameSummary
+  white={gameSummary.white}
+  black={gameSummary.black}
+  result={gameSummary.result}
+  event={gameSummary.event}
+  date={gameSummary.date}
+  moveCount={gameSummary.moveCount}
+  opening={gameSummary.opening}
+  variation={gameSummary.variation}
+  eco={gameSummary.eco}
+/>
           )}
           {gameSummary && (
-  <OpeningStudy opening={gameSummary.opening} />
+  <OpeningStudy
+  opening={gameSummary.opening}
+  variation={gameSummary.variation}
+  eco={gameSummary.eco}
+/>
 )}
 
           <ChessGame pgn={pgn} />
