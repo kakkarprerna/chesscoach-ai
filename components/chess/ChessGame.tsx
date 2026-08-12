@@ -261,89 +261,192 @@ export default function ChessGame({
       ? "White"
       : "Black";
 
-  return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
+    return (
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
       {/* Chessboard */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+      <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-4 shadow-xl sm:p-6">
         <div className="mx-auto w-full max-w-[680px]">
+          {/* Friendly board header */}
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                Your game
+              </p>
+
+              <h2 className="mt-1 text-xl font-bold text-white sm:text-2xl">
+                What would you play?
+              </h2>
+            </div>
+
+            <div className="rounded-full bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-300">
+              Move {currentMove}
+            </div>
+          </div>
+
           <Chessboard
             options={{
               position,
               onPieceDrop: handlePieceDrop,
             }}
           />
-        </div>
 
-        {/* Position information */}
-        <div className="mt-4 flex items-center justify-between text-sm">
-          <span className="text-zinc-500">
-            {moves.length === 0
-              ? "New game"
-              : `Position ${currentMove} of ${moves.length}`}
-          </span>
+          {/* Turn indicator */}
+          <div className="mt-4 flex items-center justify-center">
+            <div className="rounded-full border border-zinc-700 bg-zinc-950 px-4 py-2">
+              <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-emerald-400" />
 
-          <span className="text-zinc-400">
-            {currentTurn} to move
-          </span>
-        </div>
-
-        {/* Navigation */}
-        <div className="mt-4 grid grid-cols-4 gap-2">
-          <button
-            type="button"
-            onClick={goToFirstMove}
-            disabled={currentMove === 0}
-            className="rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-300 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            First
-          </button>
-
-          <button
-            type="button"
-            onClick={goToPreviousMove}
-            disabled={currentMove === 0}
-            className="rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-300 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            Previous
-          </button>
-
-          <button
-            type="button"
-            onClick={goToNextMove}
-            disabled={currentMove === moves.length}
-            className="rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-300 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            Next
-          </button>
-
-          <button
-            type="button"
-            onClick={goToLastMove}
-            disabled={currentMove === moves.length}
-            className="rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-300 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            Last
-          </button>
-        </div>
-
-        {/* Reset */}
-        <button
-          type="button"
-          onClick={resetGame}
-          className="mt-4 w-full rounded-xl border border-zinc-700 px-4 py-3 text-sm text-zinc-200 transition hover:bg-zinc-800"
-        >
-          Reset board
-        </button>
-
-        {/* Move error */}
-        {error && (
-          <div className="mt-4 rounded-xl border border-red-900/50 bg-red-950/30 px-4 py-3">
-            <p className="text-sm text-red-400">
-              {error}
-            </p>
+              <span className="text-sm font-semibold text-zinc-200">
+                {currentTurn}'s turn
+              </span>
+            </div>
           </div>
-        )}
+
+          {/* Navigation */}
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={goToPreviousMove}
+              disabled={currentMove === 0}
+              className="rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-semibold text-zinc-200 transition hover:border-zinc-600 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              ← Back
+            </button>
+
+            <button
+              type="button"
+              onClick={goToNextMove}
+              disabled={currentMove === moves.length}
+              className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-bold text-zinc-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              Next →
+            </button>
+          </div>
+
+          {/* Replay controls */}
+          <div className="mt-3 flex justify-center gap-2">
+            <button
+              type="button"
+              onClick={goToFirstMove}
+              disabled={currentMove === 0}
+              className="rounded-xl px-3 py-2 text-xs font-medium text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300 disabled:opacity-30"
+            >
+              ↤ Start
+            </button>
+
+            <button
+              type="button"
+              onClick={goToLastMove}
+              disabled={currentMove === moves.length}
+              className="rounded-xl px-3 py-2 text-xs font-medium text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300 disabled:opacity-30"
+            >
+              End ↦
+            </button>
+
+            <button
+              type="button"
+              onClick={resetGame}
+              className="rounded-xl px-3 py-2 text-xs font-medium text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300"
+            >
+              New game
+            </button>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="mt-4 rounded-2xl border border-amber-900/50 bg-amber-950/20 px-4 py-3">
+              <p className="text-center text-sm text-amber-300">
+                {error}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Simple lesson panel */}
+      <aside className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5 shadow-xl sm:p-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-2xl">
+            🧠
+          </div>
+
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+              Think like a chess player
+            </p>
+
+            <h3 className="mt-1 text-xl font-bold text-white">
+              Before you move...
+            </h3>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-3">
+          <div className="rounded-2xl bg-zinc-950 p-4">
+            <div className="flex gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-black text-zinc-950">
+                1
+              </span>
+
+              <div>
+                <p className="font-semibold text-white">
+                  Look for checks
+                </p>
+
+                <p className="mt-1 text-sm leading-5 text-zinc-500">
+                  Can you give the opponent's king a check?
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-zinc-950 p-4">
+            <div className="flex gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs font-black text-white">
+                2
+              </span>
+
+              <div>
+                <p className="font-semibold text-white">
+                  Look for captures
+                </p>
+
+                <p className="mt-1 text-sm leading-5 text-zinc-500">
+                  Is one of your opponent's pieces undefended?
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-zinc-950 p-4">
+            <div className="flex gap-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs font-black text-white">
+                3
+              </span>
+
+              <div>
+                <p className="font-semibold text-white">
+                  Spot threats
+                </p>
+
+                <p className="mt-1 text-sm leading-5 text-zinc-500">
+                  What is your opponent trying to do next?
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+          <p className="text-sm font-semibold text-emerald-300">
+            Coach challenge
+          </p>
+
+          <p className="mt-1 text-sm leading-5 text-zinc-400">
+            Don't rush! Take a few seconds to find your idea before
+            moving a piece.
+          </p>
+        </div>
+      </aside>
     </div>
   );
 }
