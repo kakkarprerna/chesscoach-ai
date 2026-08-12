@@ -1,0 +1,282 @@
+"use client";
+
+import { Chess } from "chess.js";
+import {
+  evaluatePosition,
+  EngineEvaluation,
+} from "@/lib/chess/stockfish";
+import {
+  MoveEvaluation,
+  classifyMove,
+  getMoveExplanation,
+} from "@/lib/chess/moveEvaluation";
+
+function evaluationToWhitePerspective(
+  analysis: EngineEvaluation
+): number {
+  if (analysis.mate !== null) {
+    const mateScore = 100;
+
+    return analysis.mate > 0
+      ? mateScore
+      : -mateScore;
+  }
+
+  return analysis.evaluation;
+}
+
+function getMoverEvaluation(
+  analysis: EngineEvaluation,
+  mover: "white" | "black"
+): number {
+  const whiteEvaluation =
+    evaluationToWhitePerspective(analysis);
+
+  return mover === "white"
+    ? whiteEvaluation
+    : -whiteEvaluation;
+}
+
+function uciToSan(
+  game: Chess,
+  uciMove: string | null
+): string {
+  if (!uciMove || uciMove.length < 4) {
+    return uciMove ?? "—";
+  }
+
+  const from = uciMove.slice(0, 2);
+  const to = uciMove.slice(2, 4);
+  const promotion = uciMove[4] as
+    | "q"
+    | "r"
+    | "b"
+    | "n"
+    | undefined;
+
+  try {
+    const temporaryGame = new Chess(game.fen());
+
+    const move = temporaryGame.move({
+      from,
+      to,
+      ...(promotion ? { promotion } : {}),
+    });
+
+    return move?.san ?? uciMove;
+  } catch {
+    return uciMove;
+  }
+}
+
+export interface GameAnalysisResult {
+  moves: MoveEvaluation[];
+  averageEvaluationLoss: number;
+  whiteBlunders: number;
+  blackBlunders: number;
+  whiteMistakes: number;
+  blackMistakes: number;
+  whiteInaccuracies: number;
+  blackInaccuracies: number;
+}
+
+export async function analyzeGame(
+  pgn: string,
+  depth = 10,
+  onProgress?: (completed: number, total: number) => void
+): Promise<GameAnalysisResult> {
+  const game = new Chess();
+
+  game.loadPgn(pgn);
+
+  const history = game.history();
+
+  if (history.length === 0) {
+    return {
+      moves: [],
+      averageEvaluationLoss: 0,
+      whiteBlunders: 0,
+      blackBlunders: 0,
+      whiteMistakes: 0,
+      blackMistakes: 0,
+      whiteInaccuracies: 0,
+      blackInaccuracies: 0,
+    };
+  }
+
+  /*
+   * We start from the initial position.
+   *
+   * For every move:
+   *
+   * 1. Analyse the position before the move.
+   * 2. Get Stockfish's best move.
+   * 3. Make the actual move.
+   * 4. Analyse the resulting position.
+   * 5. Compare the two evaluations from the
+   *    perspective of the player who moved.
+   */
+
+  const analysisGame = new Chess();
+
+  const results: MoveEvaluation[] = [];
+
+  for (let index = 0; index < history.length; index++) {
+    const move = history[index];
+
+    const mover: "white" | "black" =
+      analysisGame.turn() === "w"
+        ? "white"
+        : "black";
+
+    const moveNumber =
+      Math.floor(index / 2) + 1;
+
+    const positionBefore = analysisGame.fen();
+
+    /*
+     * Analyse before the move.
+     */
+    const beforeAnalysis =
+      await evaluatePosition(
+        positionBefore,
+        depth
+      );
+
+    const bestMove = uciToSan(
+      analysisGame,
+      beforeAnalysis.bestMove
+    );
+
+    /*
+     * Make the actual player move.
+     */
+    let playedMove;
+
+    try {
+      playedMove = analysisGame.move(move);
+    } catch {
+      continue;
+    }
+
+    if (!playedMove) {
+      continue;
+    }
+
+    const positionAfter = analysisGame.fen();
+
+    /*
+     * Analyse after the move.
+     */
+    const afterAnalysis =
+      await evaluatePosition(
+        positionAfter,
+        depth
+      );
+
+    /*
+     * Both values are converted to the perspective
+     * of the player who made the move.
+     */
+    const evaluationBefore =
+      getMoverEvaluation(
+        beforeAnalysis,
+        mover
+      );
+
+    const evaluationAfter =
+      getMoverEvaluation(
+        afterAnalysis,
+        mover
+      );
+
+    /*
+     * Positive loss means the player made the
+     * position worse for themselves.
+     */
+    const evaluationLoss = Math.max(
+      0,
+      evaluationBefore - evaluationAfter
+    );
+
+    const classification =
+      classifyMove(evaluationLoss);
+
+    const explanation =
+      getMoveExplanation(
+        classification,
+        playedMove.san,
+        bestMove,
+        evaluationLoss
+      );
+
+    results.push({
+      moveNumber,
+      color: mover,
+      move: playedMove.san,
+      bestMove,
+      evaluationBefore,
+      evaluationAfter,
+      evaluationLoss,
+      classification,
+      fen: positionAfter,
+      explanation,
+    });
+
+    onProgress?.(
+      index + 1,
+      history.length
+    );
+  }
+
+  const averageEvaluationLoss =
+    results.length === 0
+      ? 0
+      : results.reduce(
+          (sum, move) =>
+            sum + move.evaluationLoss,
+          0
+        ) / results.length;
+
+  return {
+    moves: results,
+
+    averageEvaluationLoss,
+
+    whiteBlunders: results.filter(
+      (move) =>
+        move.color === "white" &&
+        move.classification === "blunder"
+    ).length,
+
+    blackBlunders: results.filter(
+      (move) =>
+        move.color === "black" &&
+        move.classification === "blunder"
+    ).length,
+
+    whiteMistakes: results.filter(
+      (move) =>
+        move.color === "white" &&
+        move.classification === "mistake"
+    ).length,
+
+    blackMistakes: results.filter(
+      (move) =>
+        move.color === "black" &&
+        move.classification === "mistake"
+    ).length,
+
+    whiteInaccuracies: results.filter(
+      (move) =>
+        move.color === "white" &&
+        move.classification === "inaccuracy"
+    ).length,
+
+    blackInaccuracies: results.filter(
+      (move) =>
+        move.color === "black" &&
+        move.classification === "inaccuracy"
+    ).length,
+  };
+}

@@ -5,19 +5,29 @@ import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
 interface ChessGameProps {
-  pgn?: string;
+  pgn: string;
+  onPositionChange?: (fen: string) => void;
 }
 
-export default function ChessGame({ pgn }: ChessGameProps) {
+export default function ChessGame({
+  pgn,
+  onPositionChange,
+}: ChessGameProps) {
   const gameRef = useRef(new Chess());
 
-  const [position, setPosition] = useState(gameRef.current.fen());
+  const [position, setPosition] = useState(
+    gameRef.current.fen()
+  );
+
   const [moves, setMoves] = useState<string[]>([]);
   const [currentMove, setCurrentMove] = useState(0);
   const [error, setError] = useState("");
 
   /*
-   * Load a PGN whenever the parent provides one.
+   * Load PGN.
+   *
+   * The board initially shows the final position of the
+   * imported game.
    */
   useEffect(() => {
     if (!pgn) {
@@ -25,52 +35,66 @@ export default function ChessGame({ pgn }: ChessGameProps) {
     }
 
     try {
-      const newGame = new Chess();
+      const game = new Chess();
 
-      newGame.loadPgn(pgn);
+      game.loadPgn(pgn);
 
-      const history = newGame.history();
+      const history = game.history();
+      const fen = game.fen();
 
-      gameRef.current = newGame;
+      gameRef.current = game;
 
       setMoves(history);
       setCurrentMove(history.length);
-      setPosition(newGame.fen());
+      setPosition(fen);
       setError("");
-    } catch {
-      setError("This PGN could not be loaded. Please check the format.");
+
+      onPositionChange?.(fen);
+    } catch (error) {
+      console.error("PGN load error:", error);
+
+      setMoves([]);
+      setCurrentMove(0);
+      setError(
+        "This PGN could not be loaded. Please check the format."
+      );
     }
-  }, [pgn]);
+  }, [pgn, onPositionChange]);
 
   /*
-   * Rebuild the board position at a specific move.
+   * Reconstruct the position after a specific number of moves.
    */
-  function getPositionAtMove(moveNumber: number) {
+  function getPositionAtMove(moveNumber: number): string {
     if (!pgn) {
       return new Chess().fen();
     }
 
     try {
+      const sourceGame = new Chess();
+
+      sourceGame.loadPgn(pgn);
+
+      const history = sourceGame.history();
+
       const replayGame = new Chess();
 
-      replayGame.loadPgn(pgn);
-
-      const history = replayGame.history();
-
-      const positionGame = new Chess();
-
       for (let i = 0; i < moveNumber; i++) {
-        positionGame.move(history[i]);
+        replayGame.move(history[i]);
       }
 
-      return positionGame.fen();
-    } catch {
+      return replayGame.fen();
+    } catch (error) {
+      console.error(
+        "Could not rebuild chess position:",
+        error
+      );
+
       return new Chess().fen();
     }
   }
 
   /*
-   * Move to a specific point in the game.
+   * Navigate to a position in the imported game.
    */
   function goToMove(moveNumber: number) {
     const safeMove = Math.max(
@@ -78,8 +102,19 @@ export default function ChessGame({ pgn }: ChessGameProps) {
       Math.min(moveNumber, moves.length)
     );
 
+    const fen = getPositionAtMove(safeMove);
+
+    /*
+     * Synchronize the actual chess engine state
+     * with the position displayed by the board.
+     */
+    gameRef.current = new Chess(fen);
+
+    setPosition(fen);
     setCurrentMove(safeMove);
-    setPosition(getPositionAtMove(safeMove));
+    setError("");
+
+    onPositionChange?.(fen);
   }
 
   function goToFirstMove() {
@@ -99,71 +134,158 @@ export default function ChessGame({ pgn }: ChessGameProps) {
   }
 
   /*
-   * Manual board moves.
-   *
-   * We only allow manual moves when the player is
-   * looking at the latest position.
+   * Handle a move made directly on the board.
    */
-function handlePieceDrop({
-  sourceSquare,
-  targetSquare,
-}: {
-  sourceSquare: string;
-  targetSquare: string | null;
-}) {
+  function handlePieceDrop({
+    sourceSquare,
+    targetSquare,
+  }: {
+    sourceSquare: string;
+    targetSquare: string | null;
+  }) {
     if (!targetSquare) {
       return false;
     }
 
+    if (sourceSquare === targetSquare) {
+      return false;
+    }
+
+    /*
+     * Do not allow editing a historical position.
+     * The user must first go to the latest position.
+     */
     if (currentMove !== moves.length) {
+      setError(
+        "Go to the latest position before making a move."
+      );
+
+      return false;
+    }
+
+    const game = gameRef.current;
+
+    /*
+     * Check what piece is actually on the source square.
+     */
+    const piece = game.get(sourceSquare as never);
+
+    if (!piece) {
+      setError(
+        `There is no piece on ${sourceSquare}.`
+      );
+
+      return false;
+    }
+
+    /*
+     * Make sure the player is moving the side whose turn it is.
+     */
+    const currentTurn = game.turn();
+
+    if (
+      (currentTurn === "w" && piece.color !== "w") ||
+      (currentTurn === "b" && piece.color !== "b")
+    ) {
+      setError(
+        `It is ${
+          currentTurn === "w" ? "White" : "Black"
+        }'s turn.`
+      );
+
       return false;
     }
 
     try {
-      const move = gameRef.current.move({
+      const move = game.move({
         from: sourceSquare,
         to: targetSquare,
         promotion: "q",
       });
 
       if (!move) {
+        setError("That move is not legal.");
+
         return false;
       }
 
-      const newHistory = gameRef.current.history();
+      const fen = game.fen();
 
-      setMoves(newHistory);
-      setCurrentMove(newHistory.length);
-      setPosition(gameRef.current.fen());
+      /*
+       * The gameRef is already the authoritative state.
+       * Now synchronize React's displayed state.
+       */
+      setPosition(fen);
+
+      setMoves((previousMoves) => [
+        ...previousMoves,
+        move.san,
+      ]);
+
+      setCurrentMove(
+        (previousMove) => previousMove + 1
+      );
+
       setError("");
+
+      onPositionChange?.(fen);
 
       return true;
     } catch {
+      setError("That move is not legal.");
+
       return false;
     }
   }
 
+  /*
+   * Reset to a completely new chess position.
+   */
   function resetGame() {
-    const newGame = new Chess();
+    const game = new Chess();
 
-    gameRef.current = newGame;
+    gameRef.current = game;
 
-    setPosition(newGame.fen());
+    const fen = game.fen();
+
+    setPosition(fen);
     setMoves([]);
     setCurrentMove(0);
     setError("");
+
+    onPositionChange?.(fen);
   }
 
+  const currentTurn =
+    gameRef.current.turn() === "w"
+      ? "White"
+      : "Black";
+
   return (
-    <div className="grid gap-8 lg:grid-cols-[560px_1fr]">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px]">
       {/* Chessboard */}
-      <div>
-       <Chessboard
-  options={{
-    position,
-    onPieceDrop: handlePieceDrop,
-  }}
-/>
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+        <div className="mx-auto w-full max-w-[680px]">
+          <Chessboard
+            options={{
+              position,
+              onPieceDrop: handlePieceDrop,
+            }}
+          />
+        </div>
+
+        {/* Position information */}
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <span className="text-zinc-500">
+            {moves.length === 0
+              ? "New game"
+              : `Position ${currentMove} of ${moves.length}`}
+          </span>
+
+          <span className="text-zinc-400">
+            {currentTurn} to move
+          </span>
+        </div>
 
         {/* Navigation */}
         <div className="mt-4 grid grid-cols-4 gap-2">
@@ -204,12 +326,7 @@ function handlePieceDrop({
           </button>
         </div>
 
-        <div className="mt-3 text-center text-xs text-zinc-500">
-          {moves.length === 0
-            ? "No game loaded"
-            : `Position ${currentMove} of ${moves.length}`}
-        </div>
-
+        {/* Reset */}
         <button
           type="button"
           onClick={resetGame}
@@ -217,132 +334,15 @@ function handlePieceDrop({
         >
           Reset board
         </button>
-      </div>
 
-      {/* Game information */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-        <p className="text-sm uppercase tracking-wider text-emerald-400">
-          Game workspace
-        </p>
-
-        <h2 className="mt-2 text-2xl font-semibold">
-          Your game
-        </h2>
-
-        <p className="mt-2 text-sm text-zinc-400">
-          Replay the game move by move and inspect each position.
-        </p>
-
+        {/* Move error */}
         {error && (
-          <div className="mt-6 rounded-xl border border-red-900 bg-red-950/30 p-4">
+          <div className="mt-4 rounded-xl border border-red-900/50 bg-red-950/30 px-4 py-3">
             <p className="text-sm text-red-400">
               {error}
             </p>
           </div>
         )}
-
-        {/* Move list */}
-        <div className="mt-8">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="font-medium">
-              Moves
-            </h3>
-
-            <span className="text-xs text-zinc-500">
-              {moves.length} moves
-            </span>
-          </div>
-
-          <div className="max-h-96 min-h-40 overflow-y-auto rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-            {moves.length === 0 ? (
-              <p className="text-sm text-zinc-600">
-                No moves yet.
-              </p>
-            ) : (
-              <div className="space-y-1 text-sm">
-                {Array.from(
-                  { length: Math.ceil(moves.length / 2) },
-                  (_, index) => {
-                    const whiteIndex = index * 2;
-                    const blackIndex = whiteIndex + 1;
-
-                    const whiteMove = moves[whiteIndex];
-                    const blackMove = moves[blackIndex];
-
-                    return (
-                      <div
-                        key={index}
-                        className="grid grid-cols-[32px_1fr_1fr] gap-2"
-                      >
-                        <span className="py-2 text-zinc-600">
-                          {index + 1}.
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={() => goToMove(whiteIndex + 1)}
-                          className={`rounded-lg px-2 py-2 text-left transition ${
-                            currentMove === whiteIndex + 1
-                              ? "bg-emerald-500/15 text-emerald-400"
-                              : "text-zinc-300 hover:bg-zinc-800"
-                          }`}
-                        >
-                          {whiteMove}
-                        </button>
-
-                        {blackMove ? (
-                          <button
-                            type="button"
-                            onClick={() => goToMove(blackIndex + 1)}
-                            className={`rounded-lg px-2 py-2 text-left transition ${
-                              currentMove === blackIndex + 1
-                                ? "bg-emerald-500/15 text-emerald-400"
-                                : "text-zinc-400 hover:bg-zinc-800"
-                            }`}
-                          >
-                            {blackMove}
-                          </button>
-                        ) : (
-                          <span />
-                        )}
-                      </div>
-                    );
-                  }
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Current position */}
-        <div className="mt-6 rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-          <p className="text-xs uppercase tracking-wider text-zinc-500">
-            Current position
-          </p>
-
-          <p className="mt-2 text-sm text-zinc-300">
-            {currentMove === 0
-              ? "Starting position"
-              : currentMove === moves.length
-                ? "Final position"
-                : `After ${moves[currentMove - 1]}`}
-          </p>
-        </div>
-
-        {/* Evaluation placeholder */}
-        <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-          <p className="text-xs uppercase tracking-wider text-zinc-500">
-            Evaluation
-          </p>
-
-          <p className="mt-2 text-2xl font-semibold">
-            —
-          </p>
-
-          <p className="mt-1 text-sm text-zinc-500">
-            Stockfish analysis will appear here.
-          </p>
-        </div>
       </div>
     </div>
   );

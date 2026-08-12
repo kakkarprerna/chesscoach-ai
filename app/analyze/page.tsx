@@ -6,10 +6,14 @@ import ChessGame from "@/components/chess/ChessGame";
 import GameSummary from "@/components/game/GameSummary";
 import { parsePGN, ParsedGame } from "@/lib/chess/parsePGN";
 import OpeningStudy from "@/components/opening/OpeningStudy";
+import EngineAnalysis from "@/components/chess/EngineAnalysis";
+import GameAnalysis from "@/components/chess/GameAnalysis";
 
 export default function AnalyzePage() {
   const [pgn, setPgn] = useState("");
-  const [gameSummary, setGameSummary] = useState<ParsedGame | null>(null);
+  const [gameSummary, setGameSummary] =
+    useState<ParsedGame | null>(null);
+  const [currentFen, setCurrentFen] = useState("");
 
   function handleLoadGame(newPgn: string) {
     try {
@@ -17,15 +21,23 @@ export default function AnalyzePage() {
 
       setPgn(newPgn);
       setGameSummary(parsedGame);
-    } catch {
+
+      // Reset engine position until ChessGame reports the
+      // newly loaded position.
+      setCurrentFen("");
+    } catch (error) {
+      console.error("Failed to load PGN:", error);
+
       setPgn("");
       setGameSummary(null);
+      setCurrentFen("");
     }
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 px-6 py-12 text-white">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-zinc-950 text-white">
+      <div className="mx-auto max-w-7xl px-6 py-12">
+        {/* Header */}
         <div className="mb-10">
           <p className="text-sm font-medium uppercase tracking-wider text-emerald-400">
             Game Analysis
@@ -36,36 +48,61 @@ export default function AnalyzePage() {
           </h1>
 
           <p className="mt-4 max-w-2xl text-zinc-400">
-            Import a game and use ChessCoach AI to understand what happened,
-            why it happened, and how to improve.
+            Import a game and use ChessCoach AI to understand
+            what happened, why it happened, and how to improve.
           </p>
         </div>
 
         <div className="space-y-8">
+          {/* PGN Import */}
           <PGNImporter onLoadGame={handleLoadGame} />
 
+          {/* Game Summary */}
           {gameSummary && (
-           <GameSummary
-  white={gameSummary.white}
-  black={gameSummary.black}
-  result={gameSummary.result}
-  event={gameSummary.event}
-  date={gameSummary.date}
-  moveCount={gameSummary.moveCount}
-  opening={gameSummary.opening}
-  variation={gameSummary.variation}
-  eco={gameSummary.eco}
-/>
+            <GameSummary
+              white={gameSummary.white}
+              black={gameSummary.black}
+              result={gameSummary.result}
+              event={gameSummary.event}
+              date={gameSummary.date}
+              moveCount={gameSummary.moveCount}
+              opening={gameSummary.opening}
+              variation={gameSummary.variation}
+              eco={gameSummary.eco}
+            />
           )}
-          {gameSummary && (
-  <OpeningStudy
-  opening={gameSummary.opening}
-  variation={gameSummary.variation}
-  eco={gameSummary.eco}
-/>
-)}
 
-          <ChessGame pgn={pgn} />
+          {/* Opening Study */}
+          {gameSummary && (
+            <OpeningStudy
+              opening={gameSummary.opening}
+              variation={gameSummary.variation}
+              eco={gameSummary.eco}
+            />
+          )}
+
+          {/* Chessboard + Replay */}
+          {pgn && (
+            <ChessGame
+              pgn={pgn}
+              onPositionChange={setCurrentFen}
+            />
+          )}
+
+          {/* Engine Analysis for selected position */}
+          {currentFen && (
+            <EngineAnalysis fen={currentFen} />
+          )}
+
+          {/* Full Game Analysis */}
+          {pgn && (
+            <GameAnalysis
+              pgn={pgn}
+              onSelectMove={(fen) => {
+                setCurrentFen(fen);
+              }}
+            />
+          )}
         </div>
       </div>
     </main>
