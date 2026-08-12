@@ -70,14 +70,14 @@ export default function GameAnalysis({
       .slice(0, 5) ?? [];
 
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+    <section className="rounded-2xl border border-zinc-800 bg-white p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm uppercase tracking-wider text-violet-500">
             Game analysis
           </p>
 
-          <h2 className="mt-2 text-2xl font-semibold">
+          <h2 className="mt-2 text-2xl font-semibold text-zinc-900">
             Analyse the entire game
           </h2>
 
@@ -91,7 +91,7 @@ export default function GameAnalysis({
           type="button"
           onClick={handleAnalyze}
           disabled={!pgn || loading}
-          className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading
             ? `Analysing ${progress}%`
@@ -330,7 +330,7 @@ function Stat({
         {label}
       </p>
 
-      <p className="mt-2 text-2xl font-semibold">
+      <p className="mt-2 text-2xl font-semibold text-zinc-900">
         {value}
       </p>
     </div>
