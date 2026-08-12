@@ -148,13 +148,14 @@ export default function EngineAnalysis({
 
   return (
     <section className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5 shadow-xl sm:p-7">
-      <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-600/15 text-2xl">
+      {/* Coach header */}
+      <div className="flex items-center gap-4">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-600/15 text-3xl">
           ♟
         </div>
 
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-violet-500">
+          <p className="text-xs font-bold uppercase tracking-wider text-violet-400">
             ChessCoach
           </p>
 
@@ -164,23 +165,24 @@ export default function EngineAnalysis({
         </div>
       </div>
 
-      <p className="mt-4 text-sm leading-6 text-zinc-400">
-        Let's see what your position can teach you.
+      <p className="mt-4 text-base leading-6 text-zinc-400">
+        Let's see what this position can teach you.
       </p>
 
-      <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 sm:p-6">
+      {/* Main coach area */}
+      <div className="mt-6 rounded-3xl border border-zinc-800 bg-zinc-950 p-5 sm:p-7">
         {loading && (
-          <div className="py-5 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-violet-600/10 text-3xl">
+          <div className="py-7 text-center">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-violet-600/10 text-4xl">
               ♟
             </div>
 
-            <p className="mt-4 text-lg font-bold text-white">
+            <p className="mt-5 text-xl font-bold text-white">
               Coach is thinking...
             </p>
 
             <p className="mt-2 text-sm text-zinc-500">
-              Looking for the best chess idea.
+              Looking for your best chess idea.
             </p>
           </div>
         )}
@@ -199,57 +201,74 @@ export default function EngineAnalysis({
 
         {!loading && !error && analysis && coach && (
           <div className="space-y-5">
-            <div className="rounded-2xl bg-zinc-900 p-5">
-              <div className="text-4xl">
+            {/* Main lesson */}
+            <div className="rounded-3xl bg-zinc-900 p-6">
+              <div className="text-5xl">
                 {coach.emoji}
               </div>
 
-              <h3 className="mt-3 text-2xl font-black text-white">
+              <h3 className="mt-4 text-2xl font-black leading-tight text-white sm:text-3xl">
                 {coach.title}
               </h3>
 
-              <p className="mt-3 text-sm leading-6 text-zinc-400">
+              <p className="mt-3 text-base leading-7 text-zinc-300">
                 {coach.message}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-violet-600/20 bg-violet-600/10 p-5">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">💡</div>
+            {/* Coach tip */}
+            <div className="rounded-3xl border border-violet-600/20 bg-violet-600/10 p-5 sm:p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-600/15 text-2xl">
+                  💡
+                </div>
 
                 <div>
-                  <p className="font-bold text-violet-400">
+                  <p className="text-base font-bold text-violet-300">
                     Coach tip
                   </p>
 
-                  <p className="mt-2 text-sm leading-6 text-zinc-300">
+                  <p className="mt-2 text-base leading-6 text-zinc-200">
                     {coach.tip}
                   </p>
                 </div>
               </div>
             </div>
 
+            {/* Chess challenge */}
             {analysis.bestMove && (
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
-                <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
-                  Want a challenge?
+              <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5 sm:p-6">
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">
+                    🧩
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                      Challenge yourself
+                    </p>
+
+                    <p className="mt-1 text-lg font-bold text-white">
+                      Can you find the strongest move?
+                    </p>
+                  </div>
+                </div>
+
+                <p className="mt-3 text-sm leading-6 text-zinc-400">
+                  Think first. Then reveal the coach's answer.
                 </p>
 
-                <p className="mt-2 text-lg font-bold text-white">
-                  Can you find the strongest move?
-                </p>
-
-                <p className="mt-2 text-sm text-zinc-500">
-                  Try to find it yourself before revealing the answer.
-                </p>
-
-                <details className="mt-4">
-                  <summary className="cursor-pointer text-sm font-semibold text-violet-500 hover:text-violet-400">
+                <details className="mt-5">
+                  <summary className="inline-flex cursor-pointer list-none items-center justify-center rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-violet-500">
                     Reveal the coach's move
                   </summary>
 
-                  <div className="mt-3 rounded-xl bg-zinc-950 p-4">
-                    <p className="text-3xl font-black text-violet-500">
+                  <div className="mt-4 rounded-2xl border border-violet-600/20 bg-violet-600/10 p-5 text-center">
+                    <p className="text-xs font-bold uppercase tracking-wider text-violet-400">
+                      Coach's move
+                    </p>
+
+                    <p className="mt-2 text-3xl font-black text-white">
                       {analysis.bestMove}
                     </p>
                   </div>
@@ -257,6 +276,7 @@ export default function EngineAnalysis({
               </div>
             )}
 
+            {/* Technical details */}
             <div className="border-t border-zinc-800 pt-4">
               <button
                 type="button"
@@ -266,15 +286,15 @@ export default function EngineAnalysis({
                 className="text-xs font-medium text-zinc-600 transition hover:text-zinc-400"
               >
                 {showDetails
-                  ? "Hide engine details"
-                  : "Show engine details"}
+                  ? "Hide technical details"
+                  : "Show technical details"}
               </button>
 
               {showDetails && (
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
                   <div className="rounded-xl bg-zinc-900 p-3">
                     <p className="text-xs text-zinc-600">
-                      Evaluation
+                      Engine evaluation
                     </p>
 
                     <p className="mt-1 font-mono text-sm text-zinc-300">
