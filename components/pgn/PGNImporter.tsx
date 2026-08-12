@@ -27,7 +27,7 @@ export default function PGNImporter({
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
       <div>
-        <p className="text-sm font-medium uppercase tracking-wider text-emerald-400">
+        <p className="text-sm font-medium uppercase tracking-wider text-violet-500">
           Import game
         </p>
 
@@ -53,13 +53,13 @@ Example:
 1. e4 e5
 2. Nf3 Nc6
 3. Bc4 Nf6`}
-        className="mt-6 min-h-48 w-full resize-y rounded-xl border border-zinc-700 bg-zinc-950 p-4 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-emerald-500"
+        className="mt-6 min-h-48 w-full resize-y rounded-xl border border-zinc-700 bg-zinc-950 p-4 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-violet-600"
       />
 
       <button
         type="button"
         onClick={handleLoadGame}
-        className="mt-4 w-full cursor-pointer rounded-xl bg-emerald-500 px-4 py-3 font-medium text-black transition hover:bg-emerald-400"
+        className="mt-4 w-full cursor-pointer rounded-xl bg-violet-600 px-4 py-3 font-medium text-white transition hover:bg-violet-500"
       >
         Load Game
       </button>

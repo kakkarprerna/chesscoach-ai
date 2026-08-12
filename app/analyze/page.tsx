@@ -21,9 +21,6 @@ export default function AnalyzePage() {
 
       setPgn(newPgn);
       setGameSummary(parsedGame);
-
-      // Reset engine position until ChessGame reports the
-      // newly loaded position.
       setCurrentFen("");
     } catch (error) {
       console.error("Failed to load PGN:", error);
@@ -35,73 +32,141 @@ export default function AnalyzePage() {
   }
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-white">
-      <div className="mx-auto max-w-7xl px-6 py-12">
-        {/* Header */}
-        <div className="mb-10">
-          <p className="text-sm font-medium uppercase tracking-wider text-emerald-400">
-            Game Analysis
-          </p>
+    <main className="min-h-screen bg-gradient-to-b from-violet-50 via-white to-indigo-50 text-zinc-900">
+      <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 sm:py-12">
 
-          <h1 className="mt-3 text-4xl font-bold tracking-tight">
-            Analyse your game
+        {/* Friendly header */}
+        <header className="mb-10 text-center sm:text-left">
+          <div className="mb-4 inline-flex items-center rounded-full bg-violet-100 px-4 py-2 text-sm font-semibold text-violet-700">
+            ChessCoach AI
+          </div>
+
+          <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl">
+            Let&apos;s learn from your game!
           </h1>
 
-          <p className="mt-4 max-w-2xl text-zinc-400">
-            Import a game and use ChessCoach AI to understand
-            what happened, why it happened, and how to improve.
+          <p className="mt-4 max-w-2xl text-lg leading-8 text-zinc-600">
+            Bring in a chess game and we&apos;ll help you discover
+            your best moves, tricky moments, and ideas for your
+            next game.
           </p>
-        </div>
+        </header>
 
         <div className="space-y-8">
-          {/* PGN Import */}
-          <PGNImporter onLoadGame={handleLoadGame} />
 
-          {/* Game Summary */}
+          {/* Import */}
+          <section className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-7">
+            <div className="mb-5">
+              <h2 className="text-2xl font-bold text-zinc-900">
+                1. Bring your game
+              </h2>
+
+              <p className="mt-1 text-zinc-500">
+                Paste your PGN and let&apos;s take a look.
+              </p>
+            </div>
+
+            <PGNImporter onLoadGame={handleLoadGame} />
+          </section>
+
+          {/* Game summary */}
           {gameSummary && (
-            <GameSummary
-              white={gameSummary.white}
-              black={gameSummary.black}
-              result={gameSummary.result}
-              event={gameSummary.event}
-              date={gameSummary.date}
-              moveCount={gameSummary.moveCount}
-              opening={gameSummary.opening}
-              variation={gameSummary.variation}
-              eco={gameSummary.eco}
-            />
+            <section>
+              <GameSummary
+                white={gameSummary.white}
+                black={gameSummary.black}
+                result={gameSummary.result}
+                event={gameSummary.event}
+                date={gameSummary.date}
+                moveCount={gameSummary.moveCount}
+                opening={gameSummary.opening}
+                variation={gameSummary.variation}
+                eco={gameSummary.eco}
+              />
+            </section>
           )}
 
-          {/* Opening Study */}
+          {/* Opening */}
           {gameSummary && (
-            <OpeningStudy
-              opening={gameSummary.opening}
-              variation={gameSummary.variation}
-              eco={gameSummary.eco}
-            />
+            <section className="rounded-3xl border border-indigo-100 bg-white p-5 shadow-sm sm:p-7">
+              <OpeningStudy
+                opening={gameSummary.opening}
+                variation={gameSummary.variation}
+                eco={gameSummary.eco}
+              />
+            </section>
           )}
 
-          {/* Chessboard + Replay */}
+          {/* Board */}
           {pgn && (
-            <ChessGame
-              pgn={pgn}
-              onPositionChange={setCurrentFen}
-            />
+            <section className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-7">
+              <div className="mb-6">
+                <div className="mb-2 inline-flex rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-700">
+                  2. Explore
+                </div>
+
+                <h2 className="text-2xl font-bold text-zinc-900">
+                  Replay your game
+                </h2>
+
+                <p className="mt-1 text-zinc-500">
+                  Move through the game and see what happened.
+                </p>
+              </div>
+
+              <ChessGame
+                pgn={pgn}
+                onPositionChange={setCurrentFen}
+              />
+            </section>
           )}
 
-          {/* Engine Analysis for selected position */}
+          {/* Position analysis */}
           {currentFen && (
-            <EngineAnalysis fen={currentFen} />
+            <section className="rounded-3xl border border-purple-100 bg-purple-50/60 p-5 shadow-sm sm:p-7">
+              <div className="mb-5">
+                <div className="mb-2 inline-flex rounded-full bg-purple-100 px-3 py-1 text-xs font-bold text-purple-700">
+                  3. Discover
+                </div>
+
+                <h2 className="text-2xl font-bold text-zinc-900">
+                  What does your chess coach think?
+                </h2>
+
+                <p className="mt-1 text-zinc-600">
+                  Take a closer look at this position.
+                </p>
+              </div>
+
+              <EngineAnalysis fen={currentFen} />
+            </section>
           )}
 
-          {/* Full Game Analysis */}
+          {/* Full game analysis */}
           {pgn && (
-            <GameAnalysis
-              pgn={pgn}
-              onSelectMove={(fen) => {
-                setCurrentFen(fen);
-              }}
-            />
+            <section className="rounded-3xl border border-violet-100 bg-white p-5 shadow-sm sm:p-7">
+              <div className="mb-5">
+                <div className="mb-2 inline-flex rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-700">
+                  4. Improve
+                </div>
+
+                <h2 className="text-2xl font-bold text-zinc-900">
+                  Your game story
+                </h2>
+
+                <p className="mt-1 text-zinc-500">
+                  Find the moments that can make your next game
+                  even better.
+                </p>
+              </div>
+
+              <GameAnalysis
+                pgn={pgn}
+                onSelectMove={(fen) => {
+                  setCurrentFen(fen);
+                }}
+              />
+            </section>
           )}
         </div>
       </div>

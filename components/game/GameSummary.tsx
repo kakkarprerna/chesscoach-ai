@@ -24,7 +24,7 @@ export default function GameSummary({
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
       <div>
-        <p className="text-sm uppercase tracking-wider text-emerald-400">
+        <p className="text-sm uppercase tracking-wider text-violet-500">
           Game summary
         </p>
 

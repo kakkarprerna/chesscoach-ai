@@ -73,7 +73,7 @@ export default function GameAnalysis({
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm uppercase tracking-wider text-emerald-400">
+          <p className="text-sm uppercase tracking-wider text-violet-500">
             Game analysis
           </p>
 
@@ -91,7 +91,7 @@ export default function GameAnalysis({
           type="button"
           onClick={handleAnalyze}
           disabled={!pgn || loading}
-          className="rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-xl bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading
             ? `Analysing ${progress}%`
@@ -103,7 +103,7 @@ export default function GameAnalysis({
         <div className="mt-6">
           <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
             <div
-              className="h-full rounded-full bg-emerald-500 transition-all"
+              className="h-full rounded-full bg-violet-600 transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -240,7 +240,7 @@ export default function GameAnalysis({
                           Engine suggestion
                         </p>
 
-                        <p className="mt-1 text-sm text-emerald-400">
+                        <p className="mt-1 text-sm text-violet-500">
                           {move.bestMove}
                         </p>
                       </div>
@@ -297,7 +297,7 @@ export default function GameAnalysis({
                       />
                     </div>
 
-                    <span className="text-xs text-emerald-400">
+                    <span className="text-xs text-violet-500">
                       {move.bestMove}
                     </span>
                   </div>

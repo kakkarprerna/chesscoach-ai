@@ -10,60 +10,74 @@ interface EngineAnalysisProps {
   fen: string;
 }
 
-function getCoachTitle(analysis: EngineEvaluation): string {
+function getCoachContent(analysis: EngineEvaluation) {
   if (analysis.mate !== null) {
-    return analysis.mate > 0
-      ? "There is a winning attack!"
-      : "Careful — this position is in danger.";
+    if (analysis.mate > 0) {
+      return {
+        emoji: "🎉",
+        title: "You have a winning attack!",
+        message:
+          "Look for checks, captures and threats. You may be very close to winning!",
+        tip: "Can you find the move that keeps the attack going?",
+      };
+    }
+
+    return {
+      emoji: "🛡️",
+      title: "Your king needs help!",
+      message:
+        "Your opponent has a dangerous attack. Slow down and look for their biggest threat.",
+      tip: "What is your opponent threatening right now?",
+    };
   }
 
   if (analysis.evaluation >= 1.5) {
-    return "You're doing great!";
+    return {
+      emoji: "⭐",
+      title: "You're doing great!",
+      message:
+        "You have a strong position. Keep looking for ways to make your pieces even stronger.",
+      tip: "Can you find a move that creates another threat?",
+    };
   }
 
   if (analysis.evaluation >= 0.5) {
-    return "You're in a good position.";
+    return {
+      emoji: "👍",
+      title: "Nice position!",
+      message:
+        "You have a small advantage. Keep your pieces active and watch what your opponent is planning.",
+      tip: "Before you move, ask: what is my opponent threatening?",
+    };
   }
 
   if (analysis.evaluation > -0.5) {
-    return "This position is pretty even.";
+    return {
+      emoji: "⚖️",
+      title: "It's a fair fight!",
+      message:
+        "Both sides have good chances. This is a great moment to look for your best idea.",
+      tip: "Try checks, captures and threats.",
+    };
   }
 
   if (analysis.evaluation > -1.5) {
-    return "There's a little danger here.";
+    return {
+      emoji: "💡",
+      title: "There's a chance to improve!",
+      message:
+        "Your position is a little tricky, but don't worry. Good players look for problems and solve them.",
+      tip: "Look at what your opponent can attack next.",
+    };
   }
 
-  return "Time to find a strong defence!";
-}
-
-function getCoachMessage(analysis: EngineEvaluation): string {
-  if (analysis.mate !== null) {
-    return analysis.mate > 0
-      ? "Look for forcing moves. You may have a chance to finish the attack."
-      : "Look carefully for your opponent's threats and try to protect your king.";
-  }
-
-  if (!analysis.bestMove) {
-    return "Take a moment to look for checks, captures and threats.";
-  }
-
-  if (analysis.evaluation >= 1.5) {
-    return "You have an advantage. Look for a way to make it even stronger.";
-  }
-
-  if (analysis.evaluation >= 0.5) {
-    return "Keep developing your pieces and look for your opponent's threats.";
-  }
-
-  if (analysis.evaluation > -0.5) {
-    return "Both sides have chances. Look for a move that improves your pieces.";
-  }
-
-  if (analysis.evaluation > -1.5) {
-    return "Be careful. Look at what your opponent is attacking before you move.";
-  }
-
-  return "Look for your opponent's biggest threat first. Then find a move that keeps your pieces safe.";
+  return {
+    emoji: "🛡️",
+    title: "Time for a careful move!",
+    message:
+      "Something dangerous is happening. Take a breath and find a move that keeps your pieces and king safe.",
+    tip: "First find your opponent's biggest threat. Then find a defence.",
+  };
 }
 
 function formatEvaluation(analysis: EngineEvaluation): string {
@@ -128,105 +142,120 @@ export default function EngineAnalysis({
     };
   }, [fen]);
 
+  const coach = analysis
+    ? getCoachContent(analysis)
+    : null;
+
   return (
     <section className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5 shadow-xl sm:p-7">
-      <div>
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/15 text-2xl">
-            ♟
-          </div>
-
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-              ChessCoach
-            </p>
-
-            <h2 className="mt-1 text-2xl font-bold text-white">
-              Your Chess Coach
-            </h2>
-          </div>
+      <div className="flex items-center gap-3">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-600/15 text-2xl">
+          ♟
         </div>
 
-        <p className="mt-4 text-sm leading-6 text-zinc-400">
-          Let's see what this position can teach you.
-        </p>
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider text-violet-500">
+            ChessCoach
+          </p>
+
+          <h2 className="mt-1 text-2xl font-bold text-white">
+            Your Chess Coach
+          </h2>
+        </div>
       </div>
+
+      <p className="mt-4 text-sm leading-6 text-zinc-400">
+        Let's see what your position can teach you.
+      </p>
 
       <div className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-950 p-5 sm:p-6">
         {loading && (
-          <div className="py-4 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-2xl">
+          <div className="py-5 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-violet-600/10 text-3xl">
               ♟
             </div>
 
-            <p className="mt-4 text-lg font-semibold text-white">
-              Thinking...
+            <p className="mt-4 text-lg font-bold text-white">
+              Coach is thinking...
             </p>
 
             <p className="mt-2 text-sm text-zinc-500">
-              Your coach is looking for the strongest idea.
+              Looking for the best chess idea.
             </p>
           </div>
         )}
 
         {error && (
-          <div className="rounded-xl border border-red-900/50 bg-red-950/20 p-4">
-            <p className="text-sm text-red-300">
+          <div className="rounded-2xl border border-red-900/50 bg-red-950/20 p-5">
+            <p className="font-semibold text-red-300">
+              Hmm, something went wrong.
+            </p>
+
+            <p className="mt-2 text-sm text-red-400">
               {error}
             </p>
           </div>
         )}
 
-        {!loading && !error && analysis && (
-          <div className="space-y-6">
-            <div>
-              <p className="text-sm font-medium text-emerald-400">
-                Coach says
-              </p>
+        {!loading && !error && analysis && coach && (
+          <div className="space-y-5">
+            <div className="rounded-2xl bg-zinc-900 p-5">
+              <div className="text-4xl">
+                {coach.emoji}
+              </div>
 
-              <h3 className="mt-2 text-2xl font-bold text-white">
-                {getCoachTitle(analysis)}
+              <h3 className="mt-3 text-2xl font-black text-white">
+                {coach.title}
               </h3>
 
               <p className="mt-3 text-sm leading-6 text-zinc-400">
-                {getCoachMessage(analysis)}
+                {coach.message}
               </p>
             </div>
 
-            {analysis.bestMove && (
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5">
-                <p className="text-sm font-semibold text-emerald-300">
-                  Try this move
-                </p>
-
-                <p className="mt-2 text-4xl font-black tracking-tight text-emerald-400">
-                  {analysis.bestMove}
-                </p>
-
-                <p className="mt-2 text-xs text-zinc-500">
-                  This is the move the chess engine likes most.
-                </p>
-              </div>
-            )}
-
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+            <div className="rounded-2xl border border-violet-600/20 bg-violet-600/10 p-5">
               <div className="flex items-start gap-3">
                 <div className="text-2xl">💡</div>
 
                 <div>
-                  <p className="font-semibold text-white">
+                  <p className="font-bold text-violet-400">
                     Coach tip
                   </p>
 
-                  <p className="mt-1 text-sm leading-6 text-zinc-400">
-                    Before every move, ask yourself:
-                    <span className="font-medium text-zinc-200">
-                      {" "}What is my opponent threatening?
-                    </span>
+                  <p className="mt-2 text-sm leading-6 text-zinc-300">
+                    {coach.tip}
                   </p>
                 </div>
               </div>
             </div>
+
+            {analysis.bestMove && (
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5">
+                <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">
+                  Want a challenge?
+                </p>
+
+                <p className="mt-2 text-lg font-bold text-white">
+                  Can you find the strongest move?
+                </p>
+
+                <p className="mt-2 text-sm text-zinc-500">
+                  Try to find it yourself before revealing the answer.
+                </p>
+
+                <details className="mt-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-violet-500 hover:text-violet-400">
+                    Reveal the coach's move
+                  </summary>
+
+                  <div className="mt-3 rounded-xl bg-zinc-950 p-4">
+                    <p className="text-3xl font-black text-violet-500">
+                      {analysis.bestMove}
+                    </p>
+                  </div>
+                </details>
+              </div>
+            )}
 
             <div className="border-t border-zinc-800 pt-4">
               <button
@@ -234,7 +263,7 @@ export default function EngineAnalysis({
                 onClick={() =>
                   setShowDetails((current) => !current)
                 }
-                className="text-xs font-medium text-zinc-500 transition hover:text-zinc-300"
+                className="text-xs font-medium text-zinc-600 transition hover:text-zinc-400"
               >
                 {showDetails
                   ? "Hide engine details"

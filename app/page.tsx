@@ -7,7 +7,7 @@ export default function Home() {
       <header className="border-b border-zinc-800">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
           <Link href="/" className="text-xl font-semibold tracking-tight">
-            ChessCoach<span className="text-emerald-400">AI</span>
+            ChessCoach<span className="text-violet-500">AI</span>
           </Link>
 
           <nav className="hidden items-center gap-8 text-sm text-zinc-400 md:flex">
@@ -32,13 +32,13 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="mx-auto max-w-7xl px-6 pb-20 pt-24 md:pb-28 md:pt-32">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-6 inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-300">
+            <div className="mb-6 inline-flex items-center rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-2 text-sm text-violet-400">
               Learn from every game you play
             </div>
 
             <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
               Turn your chess games into
-              <span className="block text-emerald-400">
+              <span className="block text-violet-500">
                 better chess.
               </span>
             </h1>
@@ -51,7 +51,7 @@ export default function Home() {
             <div className="mt-10 flex flex-col justify-center gap-4 sm:flex-row">
               <Link
                 href="/analyze"
-                className="rounded-xl bg-emerald-400 px-6 py-3 font-semibold text-zinc-950 transition hover:bg-emerald-300"
+                className="rounded-xl bg-violet-500 px-6 py-3 font-semibold text-white transition hover:bg-violet-400"
               >
                 Analyse your first game
               </Link>
@@ -129,7 +129,7 @@ export default function Home() {
       >
         <div className="mx-auto max-w-6xl">
           <div className="max-w-2xl">
-            <p className="text-sm font-medium uppercase tracking-wider text-emerald-400">
+            <p className="text-sm font-medium uppercase tracking-wider text-violet-500">
               How it works
             </p>
 
@@ -168,7 +168,7 @@ export default function Home() {
                 key={item.number}
                 className="rounded-2xl border border-zinc-800 bg-zinc-950 p-7"
               >
-                <span className="text-sm font-semibold text-emerald-400">
+                <span className="text-sm font-semibold text-violet-500">
                   {item.number}
                 </span>
 
@@ -189,7 +189,7 @@ export default function Home() {
       <section id="features" className="px-6 py-24">
         <div className="mx-auto max-w-6xl">
           <div className="text-center">
-            <p className="text-sm font-medium uppercase tracking-wider text-emerald-400">
+            <p className="text-sm font-medium uppercase tracking-wider text-violet-500">
               Built for improvement
             </p>
 

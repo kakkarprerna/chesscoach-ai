@@ -269,7 +269,7 @@ export default function ChessGame({
           {/* Friendly board header */}
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+              <p className="text-xs font-bold uppercase tracking-wider text-violet-500">
                 Your game
               </p>
 
@@ -293,7 +293,7 @@ export default function ChessGame({
           {/* Turn indicator */}
           <div className="mt-4 flex items-center justify-center">
             <div className="rounded-full border border-zinc-700 bg-zinc-950 px-4 py-2">
-              <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-violet-500" />
 
               <span className="text-sm font-semibold text-zinc-200">
                 {currentTurn}'s turn
@@ -316,7 +316,7 @@ export default function ChessGame({
               type="button"
               onClick={goToNextMove}
               disabled={currentMove === moves.length}
-              className="rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-bold text-zinc-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-30"
+              className="rounded-2xl bg-violet-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-30"
             >
               Next →
             </button>
@@ -365,12 +365,12 @@ export default function ChessGame({
       {/* Simple lesson panel */}
       <aside className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5 shadow-xl sm:p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-2xl">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-600/10 text-2xl">
             🧠
           </div>
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+            <p className="text-xs font-bold uppercase tracking-wider text-violet-500">
               Think like a chess player
             </p>
 
@@ -383,7 +383,7 @@ export default function ChessGame({
         <div className="mt-6 space-y-3">
           <div className="rounded-2xl bg-zinc-950 p-4">
             <div className="flex gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-black text-zinc-950">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-600 text-xs font-black text-white">
                 1
               </span>
 
@@ -436,8 +436,8 @@ export default function ChessGame({
           </div>
         </div>
 
-        <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-          <p className="text-sm font-semibold text-emerald-300">
+        <div className="mt-5 rounded-2xl border border-violet-600/20 bg-violet-600/5 p-4">
+          <p className="text-sm font-semibold text-violet-400">
             Coach challenge
           </p>
 

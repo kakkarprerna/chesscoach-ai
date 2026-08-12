@@ -294,7 +294,7 @@ export default function OpeningStudy({
   if (!data) {
     return (
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-        <p className="text-sm uppercase tracking-wider text-emerald-400">
+        <p className="text-sm uppercase tracking-wider text-violet-500">
           Opening study
         </p>
 
@@ -313,7 +313,7 @@ export default function OpeningStudy({
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
       <div>
-        <p className="text-sm uppercase tracking-wider text-emerald-400">
+        <p className="text-sm uppercase tracking-wider text-violet-500">
           Opening study
         </p>
 
@@ -348,7 +348,7 @@ export default function OpeningStudy({
                 key={idea}
                 className="flex gap-3 text-sm leading-5 text-zinc-300"
               >
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />
                 <span>{idea}</span>
               </li>
             ))}
@@ -366,7 +366,7 @@ export default function OpeningStudy({
                 key={plan}
                 className="flex gap-3 text-sm leading-5 text-zinc-300"
               >
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />
                 <span>{plan}</span>
               </li>
             ))}
@@ -394,7 +394,7 @@ export default function OpeningStudy({
 
       <div className="mt-8">
         <div>
-          <p className="text-sm uppercase tracking-wider text-emerald-400">
+          <p className="text-sm uppercase tracking-wider text-violet-500">
             Study resources
           </p>
 
