@@ -12,14 +12,37 @@ export interface ParsedGame {
   eco: string;
 }
 
-export function parsePGN(pgn: string): ParsedGame {
-  const game = new Chess();
+export function sanitizePGN(pgn: string): string {
+  let cleanPgn = pgn
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .trim();
 
-  const cleanPgn = pgn.trim();
+  // Remove brace comments, including Lichess engine annotations.
+  cleanPgn = cleanPgn.replace(/\{[^}]*\}/g, " ");
 
-  if (!cleanPgn) {
-    throw new Error("No PGN provided.");
+  // Remove recursive parenthesized variations.
+  // Repeat because chess variations can be nested.
+  let previous = "";
+
+  while (previous !== cleanPgn) {
+    previous = cleanPgn;
+    cleanPgn = cleanPgn.replace(/\([^()]*\)/g, " ");
   }
+
+  // Remove NAG annotations such as $1, $2, etc.
+  cleanPgn = cleanPgn.replace(/\$\d+/g, " ");
+
+  // Normalize whitespace.
+  cleanPgn = cleanPgn.replace(/\s+/g, " ").trim();
+
+  return cleanPgn;
+}
+
+export function parsePGN(pgn: string): ParsedGame {
+  const cleanPgn = sanitizePGN(pgn);
+
+  const game = new Chess();
 
   try {
     game.loadPgn(cleanPgn);
@@ -38,13 +61,13 @@ export function parsePGN(pgn: string): ParsedGame {
   const history = game.history();
 
   return {
-    white: headers.White || "Unknown",
-    black: headers.Black || "Unknown",
+    white: headers.White || "White",
+    black: headers.Black || "Black",
     result: headers.Result || "*",
-    event: headers.Event || "Unknown Event",
-    date: headers.Date || "Unknown Date",
+    event: headers.Event || "Chess Game",
+    date: headers.Date || "",
     moveCount: history.length,
-    opening: headers.Opening || "Unknown",
+    opening: headers.Opening || "Unknown opening",
     variation: headers.Variation || "",
     eco: headers.ECO || "",
   };

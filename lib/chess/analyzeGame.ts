@@ -1,6 +1,8 @@
 "use client";
 
 import { Chess } from "chess.js";
+import { cleanPGN } from "@/lib/chess/cleanPGN";
+import { sanitizePGN } from "@/lib/chess/parsePGN";
 import {
   evaluatePosition,
   EngineEvaluation,
@@ -10,6 +12,12 @@ import {
   classifyMove,
   getMoveExplanation,
 } from "@/lib/chess/moveEvaluation";
+import {
+  PuzzleCandidate,
+  GamePattern,
+} from "@/lib/chess/learningTypes";
+import { generatePuzzleCandidates } from "@/lib/chess/puzzleGenerator";
+import { detectGamePatterns } from "@/lib/chess/patternDetector";
 
 function evaluationToWhitePerspective(
   analysis: EngineEvaluation
@@ -47,6 +55,7 @@ function uciToSan(
 
   const from = uciMove.slice(0, 2);
   const to = uciMove.slice(2, 4);
+
   const promotion = uciMove[4] as
     | "q"
     | "r"
@@ -71,23 +80,34 @@ function uciToSan(
 
 export interface GameAnalysisResult {
   moves: MoveEvaluation[];
+
   averageEvaluationLoss: number;
+
   whiteBlunders: number;
   blackBlunders: number;
+
   whiteMistakes: number;
   blackMistakes: number;
+
   whiteInaccuracies: number;
   blackInaccuracies: number;
+
+  puzzles: PuzzleCandidate[];
+
+  patterns: GamePattern[];
 }
 
 export async function analyzeGame(
   pgn: string,
   depth = 10,
-  onProgress?: (completed: number, total: number) => void
+  onProgress?: (
+    completed: number,
+    total: number
+  ) => void
 ): Promise<GameAnalysisResult> {
   const game = new Chess();
 
-  game.loadPgn(pgn);
+  game.loadPgn(sanitizePGN(pgn));
 
   const history = game.history();
 
@@ -95,33 +115,30 @@ export async function analyzeGame(
     return {
       moves: [],
       averageEvaluationLoss: 0,
+
       whiteBlunders: 0,
       blackBlunders: 0,
+
       whiteMistakes: 0,
       blackMistakes: 0,
+
       whiteInaccuracies: 0,
       blackInaccuracies: 0,
+
+      puzzles: [],
+      patterns: [],
     };
   }
-
-  /*
-   * We start from the initial position.
-   *
-   * For every move:
-   *
-   * 1. Analyse the position before the move.
-   * 2. Get Stockfish's best move.
-   * 3. Make the actual move.
-   * 4. Analyse the resulting position.
-   * 5. Compare the two evaluations from the
-   *    perspective of the player who moved.
-   */
 
   const analysisGame = new Chess();
 
   const results: MoveEvaluation[] = [];
 
-  for (let index = 0; index < history.length; index++) {
+  for (
+    let index = 0;
+    index < history.length;
+    index++
+  ) {
     const move = history[index];
 
     const mover: "white" | "black" =
@@ -132,11 +149,9 @@ export async function analyzeGame(
     const moveNumber =
       Math.floor(index / 2) + 1;
 
-    const positionBefore = analysisGame.fen();
+    const positionBefore =
+      analysisGame.fen();
 
-    /*
-     * Analyse before the move.
-     */
     const beforeAnalysis =
       await evaluatePosition(
         positionBefore,
@@ -148,9 +163,6 @@ export async function analyzeGame(
       beforeAnalysis.bestMove
     );
 
-    /*
-     * Make the actual player move.
-     */
     let playedMove;
 
     try {
@@ -163,21 +175,15 @@ export async function analyzeGame(
       continue;
     }
 
-    const positionAfter = analysisGame.fen();
+    const positionAfter =
+      analysisGame.fen();
 
-    /*
-     * Analyse after the move.
-     */
     const afterAnalysis =
       await evaluatePosition(
         positionAfter,
         depth
       );
 
-    /*
-     * Both values are converted to the perspective
-     * of the player who made the move.
-     */
     const evaluationBefore =
       getMoverEvaluation(
         beforeAnalysis,
@@ -190,10 +196,6 @@ export async function analyzeGame(
         mover
       );
 
-    /*
-     * Positive loss means the player made the
-     * position worse for themselves.
-     */
     const evaluationLoss = Math.max(
       0,
       evaluationBefore - evaluationAfter
@@ -220,6 +222,7 @@ export async function analyzeGame(
       evaluationLoss,
       classification,
       fen: positionAfter,
+      fenBefore: positionBefore,
       explanation,
     });
 
@@ -237,6 +240,12 @@ export async function analyzeGame(
             sum + move.evaluationLoss,
           0
         ) / results.length;
+
+  const puzzles =
+    generatePuzzleCandidates(results);
+
+  const patterns =
+    detectGamePatterns(results);
 
   return {
     moves: results,
@@ -278,5 +287,8 @@ export async function analyzeGame(
         move.color === "black" &&
         move.classification === "inaccuracy"
     ).length,
+
+    puzzles,
+    patterns,
   };
 }

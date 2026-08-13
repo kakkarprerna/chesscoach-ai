@@ -2,8 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Chess } from "chess.js";
-import { cleanPGN } from "@/lib/chess/cleanPGN";
-import { sanitizePGN } from "@/lib/chess/parsePGN";
 import { Chessboard } from "react-chessboard";
 
 interface ChessGameProps {
@@ -39,7 +37,7 @@ export default function ChessGame({
     try {
       const game = new Chess();
 
-      game.loadPgn(sanitizePGN(pgn));
+      game.loadPgn(pgn);
 
       const history = game.history();
       const fen = game.fen();
@@ -74,7 +72,7 @@ export default function ChessGame({
     try {
       const sourceGame = new Chess();
 
-      sourceGame.loadPgn(sanitizePGN(pgn));
+      sourceGame.loadPgn(pgn);
 
       const history = sourceGame.history();
 

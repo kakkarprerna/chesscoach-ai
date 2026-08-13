@@ -20,6 +20,7 @@ export interface MoveEvaluation {
   classification: MoveClassification;
 
   fen: string;
+fenBefore: string;
 
   explanation: string;
 }
