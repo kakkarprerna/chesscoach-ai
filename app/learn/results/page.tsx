@@ -255,17 +255,17 @@ export default function LearningResultsPage() {
 
                           <div className="rounded-2xl bg-violet-50 p-4">
                             <p className="text-xs font-black uppercase tracking-wide text-violet-500">
-                              Coach suggests
+                              Your challenge
                             </p>
 
-                            <p className="mt-1 text-lg font-black text-violet-700">
-                              {puzzle.bestMove}
+                            <p className="mt-1 text-sm font-bold leading-6 text-violet-700">
+                              Find a stronger move from this position.
                             </p>
                           </div>
                         </div>
 
                         <p className="mt-4 text-sm font-black text-violet-600">
-                          See this position →
+                          Try this position →
                         </p>
                       </div>
                     </div>
