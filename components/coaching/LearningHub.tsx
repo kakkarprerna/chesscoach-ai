@@ -43,6 +43,15 @@ export default function LearningHub({
 
     router.push("/learn/puzzle");
   }
+
+  function openGame(game: (typeof games)[number]) {
+    sessionStorage.setItem(
+      "chesscoach-imported-pgn",
+      game.pgn
+    );
+
+    router.push("/analyze");
+  }
   async function handleStudy() {
     if (selectedGames.length === 0) {
       return;
@@ -204,6 +213,7 @@ export default function LearningHub({
           selectionMode={selectionMode}
           onSelectMode={setSelectionMode}
           onToggleGame={toggleGame}
+          onOpenGame={openGame}
         />
       </div>
     </section>
