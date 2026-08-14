@@ -319,6 +319,63 @@ export default function AnalyzePage() {
               <div className="grid items-start gap-4 xl:grid-cols-[minmax(560px,1fr)_minmax(380px,500px)]">
                 {/* Board column */}
                 <section className="min-w-0">
+                  {gameSummary && (
+                    <div className="mb-5 rounded-[24px] border border-[#e4e2db] bg-white p-4 shadow-sm sm:p-5">
+                      <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+
+                        {/* White player */}
+                        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                          <p className="text-[11px] font-black uppercase tracking-wider text-zinc-400">
+                            White
+                          </p>
+                          <p className="mt-1 truncate text-lg font-black text-zinc-900">
+                            {gameSummary.white}
+                          </p>
+                        </div>
+
+                        {/* Result */}
+                        <div className="flex justify-center">
+                          <div
+                            className={`rounded-2xl border px-5 py-3 text-center ${
+                              gameSummary.result === "1-0"
+                                ? "border-emerald-200 bg-emerald-50"
+                                : gameSummary.result === "0-1"
+                                  ? "border-red-200 bg-red-50"
+                                  : "border-zinc-200 bg-zinc-50"
+                            }`}
+                          >
+                            <p className="text-[11px] font-black uppercase tracking-wider text-zinc-400">
+                              Result
+                            </p>
+
+                            <p
+                              className={`mt-1 text-2xl font-black ${
+                                gameSummary.result === "1-0"
+                                  ? "text-emerald-700"
+                                  : gameSummary.result === "0-1"
+                                    ? "text-red-700"
+                                    : "text-zinc-700"
+                              }`}
+                            >
+                              {gameSummary.result}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Black player */}
+                        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 px-4 py-3 sm:text-right">
+                          <p className="text-[11px] font-black uppercase tracking-wider text-zinc-500">
+                            Black
+                          </p>
+                          <p className="mt-1 truncate text-lg font-black text-white">
+                            {gameSummary.black}
+                          </p>
+                        </div>
+
+                      </div>
+                    </div>
+                  )}
+
                   <ChessGame
                     pgn={pgn}
                     externalFen={
