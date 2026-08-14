@@ -168,7 +168,7 @@ export default function GameHistorySelector({
                             : "border border-zinc-200 bg-white text-zinc-700 hover:border-indigo-200 hover:bg-indigo-50"
                         }`}
                       >
-                        {selected ? "Selected for study" : "Add to study"}
+                        {selected ? "Remove from study" : "Add to study"}
                       </button>
                     )}
                   </div>
