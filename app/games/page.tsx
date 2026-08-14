@@ -459,8 +459,9 @@ export default function GamesPage() {
           </section>
         ) : (
           <section className="overflow-hidden rounded-[28px] border border-[#e4e2db] bg-white shadow-[0_8px_30px_rgba(30,25,50,0.05)]">
-            <div className="divide-y divide-[#efede7]">
-              {filteredGames.map((game) => (
+            <div className="max-h-[650px] overflow-y-auto">
+              <div className="divide-y divide-[#efede7]">
+                {filteredGames.map((game) => (
                 <div
                   key={game.id}
                   className="group flex flex-col gap-4 px-5 py-5 transition hover:bg-[#faf9f6] md:flex-row md:items-center md:justify-between"
@@ -538,7 +539,8 @@ export default function GamesPage() {
                     </button>
                   </div>
                 </div>
-              ))}
+                ))}
+              </div>
             </div>
           </section>
         )}

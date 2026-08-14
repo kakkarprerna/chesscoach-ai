@@ -44,7 +44,15 @@ export default function GameSummary({
             Result
           </p>
 
-          <p className="mt-2 text-lg font-semibold text-zinc-100">
+          <p
+            className={`mt-2 inline-flex items-center rounded-full border px-3 py-1 text-lg font-black ${
+              result === "1-0"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : result === "0-1"
+                  ? "border-red-200 bg-red-50 text-red-700"
+                  : "border-zinc-700 bg-zinc-800 text-zinc-300"
+            }`}
+          >
             {result}
           </p>
         </div>
