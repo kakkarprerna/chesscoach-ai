@@ -60,29 +60,16 @@ function buildSolutionLine(
   moves: MoveEvaluation[],
   puzzleMove: MoveEvaluation
 ): string[] {
-  const line: string[] = [];
-
-  line.push(puzzleMove.bestMove);
-
-  const puzzleIndex =
-    moves.findIndex(
-      (move) => move === puzzleMove
-    );
-
-  if (puzzleIndex === -1) {
-    return line;
-  }
-
-  for (
-    let index = puzzleIndex + 1;
-    index < moves.length &&
-    line.length < 4;
-    index++
-  ) {
-    line.push(moves[index].move);
-  }
-
-  return line;
+  // The stored best move is the only move we can
+  // currently guarantee is part of the engine solution.
+  //
+  // Do not append the game's actual continuation here:
+  // after the player chooses a different move, those
+  // subsequent moves may no longer be legal or relevant
+  // after the recommended move.
+  return puzzleMove.bestMove
+    ? [puzzleMove.bestMove]
+    : [];
 }
 
 export function generatePuzzleCandidates(
