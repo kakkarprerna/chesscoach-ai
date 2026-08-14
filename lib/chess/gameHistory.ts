@@ -1,20 +1,16 @@
 import { ParsedGame } from "@/lib/chess/parsePGN";
+import {
+  GameSource,
+  LibraryGame,
+  getGameLibrary,
+  saveGamesToLibrary,
+  removeGameFromLibrary,
+  clearGameLibrary,
+} from "@/lib/chess/gameLibrary";
 
-export interface AnalyzedGame {
-  id: string;
-  pgn: string;
-  importedAt: string;
+export type { GameSource };
 
-  white: string;
-  black: string;
-  result: string;
-  date: string;
-  event: string;
-  moveCount: number;
-  opening: string;
-  variation: string;
-  eco: string;
-}
+export interface AnalyzedGame extends LibraryGame {}
 
 export type StoredGame = AnalyzedGame;
 
@@ -29,23 +25,23 @@ export interface GameSelection {
   gameIds: string[];
 }
 
-const STORAGE_KEY = "chesscoach-game-history";
-const MAX_GAMES = 20;
-
-function createGameId(): string {
-  return `${Date.now()}-${Math.random()
-    .toString(36)
-    .slice(2, 10)}`;
-}
+/**
+ * Game History is now a compatibility layer over the unified
+ * Game Library.
+ *
+ * The Game Library is the single source of truth.
+ */
 
 export function createStoredGame(
   pgn: string,
-  parsedGame: ParsedGame
+  parsedGame: ParsedGame,
+  source: GameSource = "pgn"
 ): AnalyzedGame {
   return {
-    id: createGameId(),
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
     pgn,
     importedAt: new Date().toISOString(),
+    source,
 
     white: parsedGame.white,
     black: parsedGame.black,
@@ -60,102 +56,29 @@ export function createStoredGame(
 }
 
 export function getGameHistory(): AnalyzedGame[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
-  try {
-    const raw =
-      window.localStorage.getItem(STORAGE_KEY);
-
-    if (!raw) {
-      return [];
-    }
-
-    const games = JSON.parse(raw);
-
-    if (!Array.isArray(games)) {
-      return [];
-    }
-
-    return games as AnalyzedGame[];
-  } catch (error) {
-    console.error(
-      "[GameHistory] Failed to read history:",
-      error
-    );
-
-    return [];
-  }
+  return getGameLibrary();
 }
 
 export function saveGameToHistory(
   game: AnalyzedGame
 ): AnalyzedGame[] {
-  const existing = getGameHistory();
+  return saveGamesToLibrary([game]);
+}
 
-  const withoutDuplicate = existing.filter(
-    (existingGame) =>
-      existingGame.pgn !== game.pgn
-  );
-
-  const updated = [
-    game,
-    ...withoutDuplicate,
-  ].slice(0, MAX_GAMES);
-
-  try {
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(updated)
-    );
-  } catch (error) {
-    console.error(
-      "[GameHistory] Failed to save game:",
-      error
-    );
-  }
-
-  return updated;
+export function saveGamesToHistory(
+  games: AnalyzedGame[]
+): AnalyzedGame[] {
+  return saveGamesToLibrary(games);
 }
 
 export function removeGameFromHistory(
   gameId: string
 ): AnalyzedGame[] {
-  const updated = getGameHistory().filter(
-    (game) => game.id !== gameId
-  );
-
-  try {
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(updated)
-    );
-  } catch (error) {
-    console.error(
-      "[GameHistory] Failed to remove game:",
-      error
-    );
-  }
-
-  return updated;
+  return removeGameFromLibrary(gameId);
 }
 
 export function clearGameHistory(): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  try {
-    window.localStorage.removeItem(
-      STORAGE_KEY
-    );
-  } catch (error) {
-    console.error(
-      "[GameHistory] Failed to clear history:",
-      error
-    );
-  }
+  clearGameLibrary();
 }
 
 export function getSelectedGames(
@@ -173,9 +96,7 @@ export function getSelectedGames(
       return games.slice(0, 20);
 
     case "selected": {
-      const selectedIds = new Set(
-        selection.gameIds
-      );
+      const selectedIds = new Set(selection.gameIds);
 
       return games.filter((game) =>
         selectedIds.has(game.id)

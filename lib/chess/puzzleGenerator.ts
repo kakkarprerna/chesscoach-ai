@@ -24,7 +24,9 @@ function getPuzzleClassification(
     move.classification !== "mistake" &&
     move.classification !== "blunder"
   ) {
-    throw new Error("Move is not a puzzle candidate.");
+    throw new Error(
+      "Move is not a puzzle candidate."
+    );
   }
 
   return move.classification;
@@ -44,6 +46,45 @@ function getPuzzleQuestion(
   return "Can you find a slightly better move?";
 }
 
+/**
+ * Build a short continuation from the moves that
+ * actually followed this position in the game.
+ *
+ * We include the coach's recommended move first,
+ * followed by up to three subsequent game moves.
+ *
+ * This gives the learner a concrete 3–4 move sequence
+ * without inventing engine variations.
+ */
+function buildSolutionLine(
+  moves: MoveEvaluation[],
+  puzzleMove: MoveEvaluation
+): string[] {
+  const line: string[] = [];
+
+  line.push(puzzleMove.bestMove);
+
+  const puzzleIndex =
+    moves.findIndex(
+      (move) => move === puzzleMove
+    );
+
+  if (puzzleIndex === -1) {
+    return line;
+  }
+
+  for (
+    let index = puzzleIndex + 1;
+    index < moves.length &&
+    line.length < 4;
+    index++
+  ) {
+    line.push(moves[index].move);
+  }
+
+  return line;
+}
+
 export function generatePuzzleCandidates(
   moves: MoveEvaluation[]
 ): PuzzleCandidate[] {
@@ -51,18 +92,19 @@ export function generatePuzzleCandidates(
     .filter(isPuzzleMove)
     .sort(
       (a, b) =>
-        b.evaluationLoss - a.evaluationLoss
+        b.evaluationLoss -
+        a.evaluationLoss
     )
     .slice(0, 5);
 
   return puzzleMoves.map(
     (move, index): PuzzleCandidate => ({
       id: `puzzle-${move.moveNumber}-${move.color}-${index}`,
+
       moveNumber: move.moveNumber,
       color: move.color,
 
-      // IMPORTANT:
-      // The puzzle starts before the child made the mistake.
+      // Puzzle starts before the mistake.
       fen: move.fenBefore,
 
       playedMove: move.move,
@@ -81,6 +123,12 @@ export function generatePuzzleCandidates(
 
       explanation:
         move.explanation,
+
+      solutionLine:
+        buildSolutionLine(
+          moves,
+          move
+        ),
     })
   );
 }

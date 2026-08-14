@@ -9,6 +9,16 @@ export interface PuzzleCandidate {
   evaluationLoss: number;
   question: string;
   explanation: string;
+
+  solutionLine: string[];
+}
+
+export interface GamePattern {
+  id: string;
+  title: string;
+  description: string;
+  count: number;
+  severity: "low" | "medium" | "high";
 }
 
 export interface GamePattern {

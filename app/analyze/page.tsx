@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import PGNImporter from "@/components/pgn/PGNImporter";
 import ChessGame from "@/components/chess/ChessGame";
 import GameSummary from "@/components/game/GameSummary";
@@ -12,6 +13,10 @@ import {
 import OpeningStudy from "@/components/opening/OpeningStudy";
 import EngineAnalysis from "@/components/chess/EngineAnalysis";
 import GameAnalysis from "@/components/chess/GameAnalysis";
+import {
+  createLibraryGame,
+  saveGamesToLibrary,
+} from "@/lib/chess/gameLibrary";
 
 type Tab =
   | "overview"
@@ -59,6 +64,7 @@ const tabs: {
 ];
 
 export default function AnalyzePage() {
+  const router = useRouter();
     useEffect(() => {
     const importedPgn = sessionStorage.getItem(
       "chesscoach-imported-pgn"
@@ -111,6 +117,29 @@ export default function AnalyzePage() {
       throw new Error("No valid chess games were found.");
     }
 
+    const libraryGames = [];
+
+    for (const game of games) {
+      try {
+        const parsed = parsePGN(game);
+
+        libraryGames.push(
+          createLibraryGame(game, parsed, "pgn")
+        );
+      } catch (error) {
+        console.error(
+          "Failed to parse one imported game:",
+          error
+        );
+      }
+    }
+
+    if (libraryGames.length === 0) {
+      throw new Error("No valid chess games were found.");
+    }
+
+    saveGamesToLibrary(libraryGames);
+
     const firstGame = games[0];
     const parsedGame = parsePGN(firstGame);
 
@@ -158,6 +187,15 @@ export default function AnalyzePage() {
             </h1>
           </div>
 
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => router.push("/games")}
+              className="rounded-xl border border-[#dedcd5] bg-white px-4 py-2.5 text-sm font-bold text-zinc-600 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
+            >
+              Game Library
+            </button>
+
           {pgn && (
             <button
               type="button"
@@ -167,6 +205,7 @@ export default function AnalyzePage() {
               Import another game
             </button>
           )}
+          </div>
         </div>
       </header>
 

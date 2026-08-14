@@ -1,0 +1,178 @@
+import { ParsedGame } from "@/lib/chess/parsePGN";
+
+export interface AnalyzedGame {
+  id: string;
+  pgn: string;
+  importedAt: string;
+
+  white: string;
+  black: string;
+  result: string;
+  date: string;
+  event: string;
+  moveCount: number;
+  opening: string;
+  variation: string;
+  eco: string;
+}
+
+export type StoredGame = AnalyzedGame;
+
+export type GameSelectionMode =
+  | "last20"
+  | "selected";
+
+export interface GameSelection {
+  mode: GameSelectionMode;
+  gameIds: string[];
+}
+
+const STORAGE_KEY = "chesscoach-game-history";
+const MAX_GAMES = 20;
+
+function createGameId(): string {
+  return `${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 10)}`;
+}
+
+export function createStoredGame(
+  pgn: string,
+  parsedGame: ParsedGame
+): AnalyzedGame {
+  return {
+    id: createGameId(),
+    pgn,
+    importedAt: new Date().toISOString(),
+
+    white: parsedGame.white,
+    black: parsedGame.black,
+    result: parsedGame.result,
+    date: parsedGame.date,
+    event: parsedGame.event,
+    moveCount: parsedGame.moveCount,
+    opening: parsedGame.opening,
+    variation: parsedGame.variation,
+    eco: parsedGame.eco,
+  };
+}
+
+export function getGameHistory(): AnalyzedGame[] {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const raw =
+      window.localStorage.getItem(STORAGE_KEY);
+
+    if (!raw) {
+      return [];
+    }
+
+    const games = JSON.parse(raw);
+
+    if (!Array.isArray(games)) {
+      return [];
+    }
+
+    return games as AnalyzedGame[];
+  } catch (error) {
+    console.error(
+      "[GameHistory] Failed to read history:",
+      error
+    );
+
+    return [];
+  }
+}
+
+export function saveGameToHistory(
+  game: AnalyzedGame
+): AnalyzedGame[] {
+  const existing = getGameHistory();
+
+  const withoutDuplicate = existing.filter(
+    (existingGame) =>
+      existingGame.pgn !== game.pgn
+  );
+
+  const updated = [
+    game,
+    ...withoutDuplicate,
+  ].slice(0, MAX_GAMES);
+
+  try {
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(updated)
+    );
+  } catch (error) {
+    console.error(
+      "[GameHistory] Failed to save game:",
+      error
+    );
+  }
+
+  return updated;
+}
+
+export function removeGameFromHistory(
+  gameId: string
+): AnalyzedGame[] {
+  const updated = getGameHistory().filter(
+    (game) => game.id !== gameId
+  );
+
+  try {
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(updated)
+    );
+  } catch (error) {
+    console.error(
+      "[GameHistory] Failed to remove game:",
+      error
+    );
+  }
+
+  return updated;
+}
+
+export function clearGameHistory(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    window.localStorage.removeItem(
+      STORAGE_KEY
+    );
+  } catch (error) {
+    console.error(
+      "[GameHistory] Failed to clear history:",
+      error
+    );
+  }
+}
+
+export function getSelectedGames(
+  games: AnalyzedGame[],
+  selection: GameSelection
+): AnalyzedGame[] {
+  if (selection.mode === "last20") {
+    return games.slice(0, MAX_GAMES);
+  }
+
+  if (selection.gameIds.length === 0) {
+    return [];
+  }
+
+  const selectedIds = new Set(
+    selection.gameIds
+  );
+
+  return games.filter((game) =>
+    selectedIds.has(game.id)
+  );
+}
