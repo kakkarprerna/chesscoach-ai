@@ -494,8 +494,16 @@ export default function GamesPage() {
                       {game.black}
                     </h3>
 
-                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500">
-                      <span>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-black ${
+                          game.result === "1-0"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : game.result === "0-1"
+                              ? "border-red-200 bg-red-50 text-red-700"
+                              : "border-zinc-200 bg-zinc-100 text-zinc-600"
+                        }`}
+                      >
                         {game.result}
                       </span>
 
