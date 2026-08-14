@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf9ff;
+  --background: #f8f8f5;
   --foreground: #18181b;
 }
 
@@ -18,7 +18,25 @@ html {
 
 body {
   margin: 0;
-  background: var(--background);
+  min-height: 100%;
+  background:
+    radial-gradient(
+      circle at 15% 0%,
+      rgba(124, 92, 246, 0.06),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 90% 15%,
+      rgba(251, 191, 36, 0.055),
+      transparent 25%
+    ),
+    var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
 }

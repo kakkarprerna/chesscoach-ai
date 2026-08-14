@@ -20,7 +20,7 @@ export interface MoveEvaluation {
   classification: MoveClassification;
 
   fen: string;
-fenBefore: string;
+  fenBefore: string;
 
   explanation: string;
 }
@@ -53,23 +53,22 @@ export function getMoveExplanation(
   bestMove: string,
   evaluationLoss: number
 ): string {
-  if (classification === "best") {
-    return "You played the engine's preferred move or stayed very close to it.";
-  }
+  switch (classification) {
+    case "best":
+      return `Excellent choice. ${move} matches Stockfish's preferred move, so you handled this position very well.`;
 
-  if (classification === "good") {
-    return "This was a solid move. There was a slightly stronger continuation available, but you kept most of the position's value.";
-  }
+    case "good":
+      return `Solid decision. ${move} kept the position under control, although ${bestMove} was a little more precise.`;
 
-  if (classification === "inaccuracy") {
-    return `This move gave away some of the position's advantage. Stockfish preferred ${bestMove}.`;
-  }
+    case "inaccuracy":
+      return `This was a playable move, but it gave up some of your position's potential. Stockfish preferred ${bestMove}. The key lesson is to look for a more active or precise continuation before committing to ${move}.`;
 
-  if (classification === "mistake") {
-    return `This move noticeably worsened your position. Stockfish preferred ${bestMove}, which would have preserved more of the position's value.`;
-  }
+    case "mistake":
+      return `This is a move worth studying. ${move} noticeably reduced the quality of your position. Stockfish preferred ${bestMove}. Before making a move like this, pause and check what your opponent can do next.`;
 
-  return `This was a major turning point. ${move} lost approximately ${evaluationLoss.toFixed(
-    1
-  )} evaluation points, while Stockfish preferred ${bestMove}.`;
+    case "blunder":
+      return `This was one of the most important moments in the game. ${move} changed the evaluation by about ${evaluationLoss.toFixed(
+        1
+      )} points, while Stockfish preferred ${bestMove}. This is a position worth revisiting so you can recognize the warning signs next time.`;
+  }
 }

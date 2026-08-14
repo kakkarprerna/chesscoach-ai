@@ -9,11 +9,13 @@ import { Chessboard } from "react-chessboard";
 interface ChessGameProps {
   pgn: string;
   onPositionChange?: (fen: string) => void;
+externalFen?: string;
 }
 
 export default function ChessGame({
   pgn,
   onPositionChange,
+externalFen,
 }: ChessGameProps) {
   const gameRef = useRef(new Chess());
 
@@ -62,6 +64,33 @@ export default function ChessGame({
       );
     }
   }, [pgn, onPositionChange]);
+
+  /*
+   * Allow external coaching controls to jump the board
+   * to a specific position.
+   */
+  useEffect(() => {
+    if (!externalFen) {
+      return;
+    }
+
+    try {
+      const game = new Chess(externalFen);
+
+      gameRef.current = game;
+
+      setPosition(externalFen);
+      setCurrentMove(0);
+      setError("");
+
+      onPositionChange?.(externalFen);
+    } catch (error) {
+      console.error(
+        "Could not load external chess position:",
+        error
+      );
+    }
+  }, [externalFen, onPositionChange]);
 
   /*
    * Reconstruct the position after a specific number of moves.
@@ -264,23 +293,23 @@ export default function ChessGame({
       : "Black";
 
     return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+    <div className="min-w-0">
       {/* Chessboard */}
-      <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-4 shadow-xl sm:p-6">
+      <div className="rounded-[28px] border border-[#e4e2db] bg-white p-4 shadow-[0_10px_35px_rgba(30,25,50,0.06)] sm:p-6">
         <div className="mx-auto w-full max-w-[680px]">
           {/* Friendly board header */}
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-violet-500">
+              <p className="text-xs font-bold uppercase tracking-wider text-violet-700">
                 Your game
               </p>
 
-              <h2 className="mt-1 text-xl font-bold text-white sm:text-2xl">
+              <h2 className="mt-1 text-xl font-bold text-zinc-900 sm:text-2xl">
                 What would you play?
               </h2>
             </div>
 
-            <div className="rounded-full bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-zinc-300">
+            <div className="rounded-full border border-[#e7e5df] bg-[#faf9f6] px-3 py-1.5 text-xs font-bold text-zinc-600">
               Move {currentMove}
             </div>
           </div>
@@ -294,10 +323,10 @@ export default function ChessGame({
 
           {/* Turn indicator */}
           <div className="mt-4 flex items-center justify-center">
-            <div className="rounded-full border border-zinc-700 bg-zinc-950 px-4 py-2">
-              <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-violet-500" />
+            <div className="rounded-full border border-[#dedcd5] bg-white px-4 py-2">
+              <span className="mr-2 inline-block h-2.5 w-2.5 rounded-full bg-violet-600" />
 
-              <span className="text-sm font-semibold text-zinc-200">
+              <span className="text-sm font-semibold text-zinc-700">
                 {currentTurn}'s turn
               </span>
             </div>
@@ -309,7 +338,7 @@ export default function ChessGame({
               type="button"
               onClick={goToPreviousMove}
               disabled={currentMove === 0}
-              className="rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm font-semibold text-zinc-200 transition hover:border-zinc-600 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-30"
+              className="rounded-2xl border border-[#dedcd5] bg-[#f7f5ef] px-4 py-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-600 hover:bg-[#f0eee8] disabled:cursor-not-allowed disabled:opacity-30"
             >
               ← Back
             </button>
@@ -318,7 +347,7 @@ export default function ChessGame({
               type="button"
               onClick={goToNextMove}
               disabled={currentMove === moves.length}
-              className="rounded-2xl bg-violet-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-30"
+              className="rounded-2xl bg-violet-600 px-4 py-3 text-sm font-bold text-zinc-900 transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-30"
             >
               Next →
             </button>
@@ -330,7 +359,7 @@ export default function ChessGame({
               type="button"
               onClick={goToFirstMove}
               disabled={currentMove === 0}
-              className="rounded-xl px-3 py-2 text-xs font-medium text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300 disabled:opacity-30"
+              className="rounded-xl px-3 py-2 text-xs font-medium text-zinc-600 transition hover:bg-[#f0eee8] hover:text-zinc-600 disabled:opacity-30"
             >
               ↤ Start
             </button>
@@ -339,7 +368,7 @@ export default function ChessGame({
               type="button"
               onClick={goToLastMove}
               disabled={currentMove === moves.length}
-              className="rounded-xl px-3 py-2 text-xs font-medium text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300 disabled:opacity-30"
+              className="rounded-xl px-3 py-2 text-xs font-medium text-zinc-600 transition hover:bg-[#f0eee8] hover:text-zinc-600 disabled:opacity-30"
             >
               End ↦
             </button>
@@ -347,7 +376,7 @@ export default function ChessGame({
             <button
               type="button"
               onClick={resetGame}
-              className="rounded-xl px-3 py-2 text-xs font-medium text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300"
+              className="rounded-xl px-3 py-2 text-xs font-medium text-zinc-600 transition hover:bg-[#f0eee8] hover:text-zinc-600"
             >
               New game
             </button>
@@ -355,8 +384,8 @@ export default function ChessGame({
 
           {/* Error */}
           {error && (
-            <div className="mt-4 rounded-2xl border border-amber-900/50 bg-amber-950/20 px-4 py-3">
-              <p className="text-center text-sm text-amber-300">
+            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <p className="text-center text-sm text-amber-700">
                 {error}
               </p>
             </div>
@@ -365,72 +394,72 @@ export default function ChessGame({
       </div>
 
       {/* Simple lesson panel */}
-      <aside className="rounded-3xl border border-zinc-800 bg-zinc-900 p-5 shadow-xl sm:p-6">
+      <aside className="rounded-3xl border border-[#e4e2db] bg-white p-5 shadow-xl sm:p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-600/10 text-2xl">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-100 text-2xl">
             🧠
           </div>
 
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-violet-500">
+            <p className="text-xs font-bold uppercase tracking-wider text-violet-700">
               Think like a chess player
             </p>
 
-            <h3 className="mt-1 text-xl font-bold text-white">
+            <h3 className="mt-1 text-xl font-bold text-zinc-900">
               Before you move...
             </h3>
           </div>
         </div>
 
         <div className="mt-6 space-y-3">
-          <div className="rounded-2xl bg-zinc-950 p-4">
+          <div className="rounded-2xl bg-[#f7f5ef] p-4">
             <div className="flex gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-600 text-xs font-black text-white">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-violet-600 text-xs font-black text-zinc-900">
                 1
               </span>
 
               <div>
-                <p className="font-semibold text-white">
+                <p className="font-semibold text-zinc-900">
                   Look for checks
                 </p>
 
-                <p className="mt-1 text-sm leading-5 text-zinc-500">
+                <p className="mt-1 text-sm leading-5 text-zinc-600">
                   Can you give the opponent's king a check?
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-zinc-950 p-4">
+          <div className="rounded-2xl bg-[#f7f5ef] p-4">
             <div className="flex gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs font-black text-white">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#dedcd5] text-xs font-black text-zinc-900">
                 2
               </span>
 
               <div>
-                <p className="font-semibold text-white">
+                <p className="font-semibold text-zinc-900">
                   Look for captures
                 </p>
 
-                <p className="mt-1 text-sm leading-5 text-zinc-500">
+                <p className="mt-1 text-sm leading-5 text-zinc-600">
                   Is one of your opponent's pieces undefended?
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-zinc-950 p-4">
+          <div className="rounded-2xl bg-[#f7f5ef] p-4">
             <div className="flex gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-zinc-700 text-xs font-black text-white">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#dedcd5] text-xs font-black text-zinc-900">
                 3
               </span>
 
               <div>
-                <p className="font-semibold text-white">
+                <p className="font-semibold text-zinc-900">
                   Spot threats
                 </p>
 
-                <p className="mt-1 text-sm leading-5 text-zinc-500">
+                <p className="mt-1 text-sm leading-5 text-zinc-600">
                   What is your opponent trying to do next?
                 </p>
               </div>
@@ -438,12 +467,12 @@ export default function ChessGame({
           </div>
         </div>
 
-        <div className="mt-5 rounded-2xl border border-violet-600/20 bg-violet-600/5 p-4">
-          <p className="text-sm font-semibold text-violet-400">
+        <div className="mt-5 rounded-2xl border border-violet-200 bg-violet-50 p-4">
+          <p className="text-sm font-semibold text-violet-700">
             Coach challenge
           </p>
 
-          <p className="mt-1 text-sm leading-5 text-zinc-400">
+          <p className="mt-1 text-sm leading-5 text-zinc-600">
             Don't rush! Take a few seconds to find your idea before
             moving a piece.
           </p>

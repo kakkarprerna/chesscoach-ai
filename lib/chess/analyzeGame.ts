@@ -10,8 +10,8 @@ import {
 import {
   MoveEvaluation,
   classifyMove,
-  getMoveExplanation,
 } from "@/lib/chess/moveEvaluation";
+import { generateCoachingExplanation } from "@/lib/chess/coaching";
 import {
   PuzzleCandidate,
   GamePattern,
@@ -196,21 +196,38 @@ export async function analyzeGame(
         mover
       );
 
-    const evaluationLoss = Math.max(
-      0,
-      evaluationBefore - evaluationAfter
-    );
+    // If Stockfish's best move is exactly what the player played,
+    // this move cannot be classified as an inaccuracy/mistake/blunder.
+    // Shallow engine searches can produce small evaluation swings,
+    // so explicitly protect the exact-best-move case.
+    const playedMoveIsBest =
+      playedMove.san === bestMove;
 
-    const classification =
-      classifyMove(evaluationLoss);
+    const evaluationLoss = playedMoveIsBest
+      ? 0
+      : Math.max(
+          0,
+          evaluationBefore - evaluationAfter
+        );
+
+    const classification = playedMoveIsBest
+      ? "best"
+      : classifyMove(evaluationLoss);
 
     const explanation =
-      getMoveExplanation(
-        classification,
-        playedMove.san,
+      generateCoachingExplanation({
+        moveNumber,
+        color: mover,
+        move: playedMove.san,
         bestMove,
-        evaluationLoss
-      );
+        evaluationBefore,
+        evaluationAfter,
+        evaluationLoss,
+        classification,
+        fen: positionAfter,
+        fenBefore: positionBefore,
+        explanation: "",
+      });
 
     results.push({
       moveNumber,

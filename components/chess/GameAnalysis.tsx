@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Chess } from "chess.js";
+import { Chessboard } from "react-chessboard";
 import {
   analyzeGame,
   GameAnalysisResult,
@@ -10,6 +12,8 @@ interface GameAnalysisProps {
   pgn: string;
   onSelectMove?: (fen: string) => void;
 }
+
+type CoachStage = "challenge" | "attempt" | "reveal";
 
 export default function GameAnalysis({
   pgn,
@@ -22,12 +26,26 @@ export default function GameAnalysis({
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
 
+  const [selectedMoment, setSelectedMoment] = useState<
+    GameAnalysisResult["moves"][number] | null
+  >(null);
+
+  const [coachStage, setCoachStage] =
+    useState<CoachStage>("challenge");
+
+  const [attemptFen, setAttemptFen] = useState("");
+  const [attemptMove, setAttemptMove] = useState("");
+  const [attemptResult, setAttemptResult] = useState<
+    "great" | "good" | "different" | null
+  >(null);
+
   async function handleAnalyze() {
     if (!pgn) return;
 
     setLoading(true);
     setError("");
     setAnalysis(null);
+    setSelectedMoment(null);
     setProgress(0);
 
     try {
@@ -67,9 +85,111 @@ export default function GameAnalysis({
       )
       .slice(0, 5) ?? [];
 
+  function openCoachingMoment(
+    move: GameAnalysisResult["moves"][number]
+  ) {
+    setSelectedMoment(move);
+    setCoachStage("challenge");
+    setAttemptFen(move.fenBefore);
+    setAttemptMove("");
+    setAttemptResult(null);
+    onSelectMove?.(move.fen);
+  }
+
+  function closeCoachingMoment() {
+    setSelectedMoment(null);
+    setCoachStage("challenge");
+    setAttemptFen("");
+    setAttemptMove("");
+    setAttemptResult(null);
+  }
+
+  function startAttempt() {
+    if (!selectedMoment) return;
+
+    setCoachStage("attempt");
+    setAttemptFen(selectedMoment.fenBefore);
+    setAttemptMove("");
+    setAttemptResult(null);
+  }
+
+  function handleAttemptMove({
+    sourceSquare,
+    targetSquare,
+  }: {
+    sourceSquare: string;
+    targetSquare: string | null;
+  }) {
+    if (!targetSquare || !selectedMoment) {
+      return false;
+    }
+
+    try {
+      const game = new Chess(attemptFen);
+
+      /*
+       * Validate the dragged piece before attempting the move.
+       * react-chessboard can report a drop even when chess.js
+       * considers the move illegal.
+       */
+      const legalMoves = game.moves({
+        square: sourceSquare as any,
+        verbose: true,
+      });
+
+      const legalMove = legalMoves.find(
+        (move) => move.to === targetSquare
+      );
+
+      if (!legalMove) {
+        return false;
+      }
+
+      const move = game.move({
+        from: sourceSquare,
+        to: targetSquare,
+        promotion: "q",
+      });
+
+      const playedMove = move.san;
+      const bestMove = selectedMoment.bestMove;
+
+      setAttemptFen(game.fen());
+      setAttemptMove(playedMove);
+
+      /*
+       * BestMove is normally SAN in the existing analysis
+       * pipeline. We compare the player's move with it.
+       */
+      if (playedMove === bestMove) {
+        setAttemptResult("great");
+      } else {
+        setAttemptResult("different");
+      }
+
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function revealCoachIdea() {
+    if (!selectedMoment) return;
+
+    setCoachStage("reveal");
+  }
+
+  function retryAttempt() {
+    if (!selectedMoment) return;
+
+    setCoachStage("attempt");
+    setAttemptFen(selectedMoment.fenBefore);
+    setAttemptMove("");
+    setAttemptResult(null);
+  }
+
   return (
     <section className="rounded-3xl border border-violet-100 bg-gradient-to-br from-white via-violet-50/40 to-indigo-50/50 p-5 shadow-sm sm:p-7">
-
       {/* Header */}
       <div className="text-center sm:text-left">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-violet-100 px-4 py-2 text-sm font-bold text-violet-700">
@@ -157,10 +277,200 @@ export default function GameAnalysis({
         </div>
       )}
 
-      {/* Results */}
-      {analysis && !loading && (
-        <div className="mt-8 space-y-8">
+      {/* Interactive coaching moment */}
+      {selectedMoment && !loading && (
+        <div className="mt-7 rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-violet-50 p-5 shadow-sm sm:p-7">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="inline-flex rounded-full bg-amber-100 px-3 py-1.5 text-xs font-black uppercase tracking-wide text-amber-700">
+                Coaching moment
+              </div>
 
+              <h3 className="mt-3 text-2xl font-black text-zinc-900">
+                {coachStage === "attempt"
+                  ? "Your turn — what would you play?"
+                  : coachStage === "reveal"
+                    ? "Here&apos;s what the coach sees"
+                    : "What would you play here?"}
+              </h3>
+
+              <p className="mt-2 text-sm leading-6 text-zinc-600">
+                {coachStage === "attempt"
+                  ? "Make a move on the board. There is no penalty for getting it wrong."
+                  : coachStage === "reveal"
+                    ? "Compare your idea with the move suggested by the coach."
+                    : "Take a moment to look at the board before checking the coach&apos;s suggestion."}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={closeCoachingMoment}
+              className="rounded-xl px-3 py-2 text-sm font-bold text-zinc-400 transition hover:bg-white hover:text-zinc-700"
+              aria-label="Close coaching moment"
+            >
+              Close
+            </button>
+          </div>
+
+          {/* Challenge */}
+          {coachStage === "challenge" && (
+            <div className="mt-6">
+              <div className="rounded-3xl border border-amber-100 bg-white p-5">
+                <div className="flex gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-xl">
+                    💭
+                  </div>
+
+                  <div>
+                    <p className="font-black text-zinc-900">
+                      Your move was{" "}
+                      <span className="text-violet-700">
+                        {selectedMoment.move}
+                      </span>
+                    </p>
+
+                    <p className="mt-2 text-sm leading-6 text-zinc-500">
+                      Before seeing the answer, try to find a
+                      better move yourself.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={startAttempt}
+                className="mt-5 w-full rounded-2xl bg-violet-600 px-5 py-4 text-base font-black text-white shadow-lg shadow-violet-200 transition hover:bg-violet-500"
+              >
+                I&apos;ll try the position →
+              </button>
+            </div>
+          )}
+
+          {/* Attempt */}
+          {coachStage === "attempt" && (
+            <div className="mt-6">
+              <div className="mx-auto max-w-[520px] overflow-hidden rounded-3xl border border-zinc-200 bg-white p-3 shadow-sm">
+                <Chessboard
+                  options={{
+                    position: attemptFen,
+                    onPieceDrop: handleAttemptMove,
+                  }}
+                />
+              </div>
+
+              <div className="mt-5 rounded-3xl border border-zinc-100 bg-white p-5 text-center">
+                {!attemptMove ? (
+                  <>
+                    <p className="text-base font-black text-zinc-900">
+                      Look for checks, captures, and threats.
+                    </p>
+
+                    <p className="mt-1 text-sm leading-6 text-zinc-500">
+                      Then move the piece you think is best.
+                    </p>
+                  </>
+                ) : attemptResult === "great" ? (
+                  <>
+                    <p className="text-xl font-black text-emerald-700">
+                      Excellent idea!
+                    </p>
+
+                    <p className="mt-1 text-sm leading-6 text-zinc-600">
+                      You found the coach&apos;s suggested move.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-xl font-black text-violet-700">
+                      Interesting choice!
+                    </p>
+
+                    <p className="mt-1 text-sm leading-6 text-zinc-600">
+                      Your move was{" "}
+                      <span className="font-bold">
+                        {attemptMove}
+                      </span>
+                      . Let&apos;s compare it with the coach&apos;s
+                      idea.
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {attemptMove && (
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={retryAttempt}
+                    className="rounded-2xl border border-zinc-200 bg-white px-5 py-3.5 text-sm font-bold text-zinc-700 transition hover:border-violet-200 hover:text-violet-700"
+                  >
+                    Try again
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={revealCoachIdea}
+                    className="rounded-2xl bg-violet-600 px-5 py-3.5 text-sm font-black text-white transition hover:bg-violet-500"
+                  >
+                    Show coach&apos;s idea →
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Reveal */}
+          {coachStage === "reveal" && (
+            <div className="mt-6 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-3xl border border-zinc-100 bg-white p-5">
+                  <p className="text-xs font-black uppercase tracking-wide text-zinc-400">
+                    Your idea
+                  </p>
+
+                  <p className="mt-2 text-2xl font-black text-zinc-900">
+                    {attemptMove || "—"}
+                  </p>
+                </div>
+
+                <div className="rounded-3xl border border-violet-100 bg-violet-50 p-5">
+                  <p className="text-xs font-black uppercase tracking-wide text-violet-500">
+                    Coach suggests
+                  </p>
+
+                  <p className="mt-2 text-2xl font-black text-violet-700">
+                    {selectedMoment.bestMove}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-3xl border border-indigo-100 bg-indigo-50 p-5">
+                <p className="text-xs font-black uppercase tracking-wide text-indigo-600">
+                  Why this matters
+                </p>
+
+                <p className="mt-2 text-base leading-7 text-zinc-700">
+                  {selectedMoment.explanation}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeCoachingMoment}
+                className="w-full rounded-2xl border border-zinc-200 bg-white px-5 py-3.5 text-sm font-bold text-zinc-700 transition hover:border-violet-200 hover:text-violet-700"
+              >
+                Back to my learning moments
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Results */}
+      {analysis && !loading && !selectedMoment && (
+        <div className="mt-8 space-y-8">
           {/* Quick summary */}
           <div>
             <div className="mb-4">
@@ -215,7 +525,8 @@ export default function GameAnalysis({
               </h3>
 
               <p className="mt-2 text-base text-zinc-500">
-                Tap a moment to jump back to that position.
+                Choose a moment and try the position yourself
+                before seeing the coach&apos;s idea.
               </p>
             </div>
 
@@ -238,10 +549,8 @@ export default function GameAnalysis({
                   <button
                     key={`${move.moveNumber}-${move.color}-${move.move}`}
                     type="button"
-                    onClick={() =>
-                      onSelectMove?.(move.fen)
-                    }
-                    className="w-full rounded-3xl border border-zinc-200 bg-white p-5 text-left shadow-sm transition hover:border-violet-200 hover:shadow-md sm:p-6"
+                    onClick={() => openCoachingMoment(move)}
+                    className="w-full rounded-3xl border border-zinc-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-md sm:p-6"
                   >
                     <div className="flex items-start gap-4">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-lg font-black text-violet-700">
@@ -268,40 +577,19 @@ export default function GameAnalysis({
                           You played {move.move}
                         </h4>
 
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-2xl bg-zinc-50 p-4">
-                            <p className="text-xs font-bold uppercase tracking-wide text-zinc-400">
-                              You played
-                            </p>
-
-                            <p className="mt-1 text-lg font-bold text-zinc-900">
-                              {move.move}
-                            </p>
-                          </div>
-
-                          <div className="rounded-2xl bg-violet-50 p-4">
-                            <p className="text-xs font-bold uppercase tracking-wide text-violet-500">
-                              Coach suggests
-                            </p>
-
-                            <p className="mt-1 text-lg font-bold text-violet-700">
-                              {move.bestMove}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 rounded-2xl bg-indigo-50 p-4">
-                          <p className="text-xs font-bold uppercase tracking-wide text-indigo-600">
-                            Why this matters
+                        <div className="mt-4 rounded-2xl bg-amber-50 p-4">
+                          <p className="text-sm font-bold text-amber-700">
+                            Your coaching challenge
                           </p>
 
-                          <p className="mt-2 text-base leading-7 text-zinc-700">
-                            {move.explanation}
+                          <p className="mt-1 text-sm leading-6 text-zinc-600">
+                            Try the position yourself before
+                            revealing the coach&apos;s idea.
                           </p>
                         </div>
 
                         <p className="mt-4 text-sm font-bold text-violet-600">
-                          Tap to see this position →
+                          Try this position →
                         </p>
                       </div>
                     </div>
@@ -337,9 +625,7 @@ export default function GameAnalysis({
                   <button
                     key={`${move.moveNumber}-${move.color}-${index}`}
                     type="button"
-                    onClick={() =>
-                      onSelectMove?.(move.fen)
-                    }
+                    onClick={() => openCoachingMoment(move)}
                     className="w-full border-b border-zinc-100 px-4 py-4 text-left last:border-b-0 hover:bg-violet-50"
                   >
                     <div className="flex items-center gap-3">
@@ -369,7 +655,6 @@ export default function GameAnalysis({
               </div>
             </div>
           </details>
-
         </div>
       )}
     </section>
@@ -418,8 +703,18 @@ function ClassificationBadge({
     blunder: "🚨 Big learning moment",
   };
 
+  const styles = {
+    best: "bg-emerald-100 text-emerald-700",
+    good: "bg-blue-100 text-blue-700",
+    inaccuracy: "bg-amber-100 text-amber-700",
+    mistake: "bg-orange-100 text-orange-700",
+    blunder: "bg-red-100 text-red-700",
+  };
+
   return (
-    <span className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-700">
+    <span
+      className={`rounded-full px-2.5 py-1 text-xs font-bold ${styles[classification]}`}
+    >
       {labels[classification]}
     </span>
   );

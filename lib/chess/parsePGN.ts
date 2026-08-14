@@ -72,3 +72,11 @@ export function parsePGN(pgn: string): ParsedGame {
     eco: headers.ECO || "",
   };
 }
+export function splitPGNGames(pgn: string): string[] {
+  return pgn
+    .replace(/\r\n/g, "\n")
+    .trim()
+    .split(/\n(?=\[Event\s)/g)
+    .map((game) => game.trim())
+    .filter(Boolean);
+}
