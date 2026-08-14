@@ -8,14 +8,20 @@ import { Chessboard } from "react-chessboard";
 
 interface ChessGameProps {
   pgn: string;
+  white?: string;
+  black?: string;
+  result?: string;
   onPositionChange?: (fen: string) => void;
-externalFen?: string;
+  externalFen?: string;
 }
 
 export default function ChessGame({
   pgn,
+  white = "White",
+  black = "Black",
+  result = "*",
   onPositionChange,
-externalFen,
+  externalFen,
 }: ChessGameProps) {
   const gameRef = useRef(new Chess());
 
@@ -292,7 +298,72 @@ externalFen,
       ? "White"
       : "Black";
 
-    return (
+  const normalizedResult = result.trim();
+
+  const whiteWon = normalizedResult === "1-0";
+  const blackWon = normalizedResult === "0-1";
+  const isDraw = normalizedResult === "1/2-1/2";
+
+  function playerResult(
+    color: "white" | "black"
+  ): "win" | "loss" | "draw" | "none" {
+    if (isDraw) {
+      return "draw";
+    }
+
+    if (color === "white" && whiteWon) {
+      return "win";
+    }
+
+    if (color === "white" && blackWon) {
+      return "loss";
+    }
+
+    if (color === "black" && blackWon) {
+      return "win";
+    }
+
+    if (color === "black" && whiteWon) {
+      return "loss";
+    }
+
+    return "none";
+  }
+
+  function resultLabel(
+    status: "win" | "loss" | "draw" | "none"
+  ) {
+    switch (status) {
+      case "win":
+        return "WIN";
+      case "loss":
+        return "LOSS";
+      case "draw":
+        return "DRAW";
+      default:
+        return "";
+    }
+  }
+
+  function resultClass(
+    status: "win" | "loss" | "draw" | "none"
+  ) {
+    switch (status) {
+      case "win":
+        return "border-emerald-200 bg-emerald-50 text-emerald-700";
+      case "loss":
+        return "border-red-200 bg-red-50 text-red-700";
+      case "draw":
+        return "border-zinc-200 bg-zinc-100 text-zinc-600";
+      default:
+        return "border-zinc-200 bg-zinc-50 text-zinc-500";
+    }
+  }
+
+  const whiteStatus = playerResult("white");
+  const blackStatus = playerResult("black");
+
+  return (
     <div className="min-w-0">
       {/* Chessboard */}
       <div className="rounded-[28px] border border-[#e4e2db] bg-white p-4 shadow-[0_10px_35px_rgba(30,25,50,0.06)] sm:p-6">
@@ -314,12 +385,71 @@ externalFen,
             </div>
           </div>
 
+          {/* Black player */}
+          <div className="mb-3 flex items-center justify-between rounded-2xl border border-[#e4e2db] bg-[#faf9f6] px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-sm font-black text-white">
+                B
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+                  Black
+                </p>
+
+                <p className="truncate text-sm font-black text-zinc-900 sm:text-base">
+                  {black}
+                </p>
+              </div>
+            </div>
+
+            {blackStatus !== "none" && (
+              <span
+                className={`shrink-0 rounded-full border px-3 py-1 text-[10px] font-black tracking-wide ${resultClass(
+                  blackStatus
+                )}`}
+              >
+                {resultLabel(blackStatus)}
+              </span>
+            )}
+          </div>
+
           <Chessboard
             options={{
               position,
+              boardOrientation: "white",
               onPieceDrop: handlePieceDrop,
             }}
           />
+
+          {/* White player */}
+          <div className="mt-3 flex items-center justify-between rounded-2xl border border-[#e4e2db] bg-[#faf9f6] px-4 py-3">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-white text-sm font-black text-zinc-700">
+                W
+              </div>
+
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-wider text-zinc-400">
+                  White
+                </p>
+
+                <p className="truncate text-sm font-black text-zinc-900 sm:text-base">
+                  {white}
+                </p>
+              </div>
+            </div>
+
+            {whiteStatus !== "none" && (
+              <span
+                className={`shrink-0 rounded-full border px-3 py-1 text-[10px] font-black tracking-wide ${resultClass(
+                  whiteStatus
+                )}`}
+              >
+                {resultLabel(whiteStatus)}
+              </span>
+            )}
+          </div>
 
           {/* Turn indicator */}
           <div className="mt-4 flex items-center justify-center">
@@ -347,7 +477,7 @@ externalFen,
               type="button"
               onClick={goToNextMove}
               disabled={currentMove === moves.length}
-              className="rounded-2xl bg-violet-600 px-4 py-3 text-sm font-bold text-zinc-900 transition hover:bg-violet-600 disabled:cursor-not-allowed disabled:opacity-30"
+              className="rounded-2xl bg-violet-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-30"
             >
               Next →
             </button>

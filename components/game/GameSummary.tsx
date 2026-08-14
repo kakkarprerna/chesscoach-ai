@@ -32,7 +32,7 @@ export default function GameSummary({
           {white} vs {black}
         </h2>
 
-        <p className="mt-2 text-sm text-zinc-500">
+        <p className="mt-2 text-sm font-medium text-zinc-300">
           {event}
           {date && ` · ${date}`}
         </p>
@@ -94,7 +94,7 @@ export default function GameSummary({
             White: {white}
           </p>
 
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-sm font-semibold text-zinc-300">
             Black: {black}
           </p>
         </div>
