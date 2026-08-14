@@ -20,11 +20,3 @@ export interface GamePattern {
   count: number;
   severity: "low" | "medium" | "high";
 }
-
-export interface GamePattern {
-  id: string;
-  title: string;
-  description: string;
-  count: number;
-  severity: "low" | "medium" | "high";
-}

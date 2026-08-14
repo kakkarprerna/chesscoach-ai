@@ -42,9 +42,6 @@ export default function PuzzlePage() {
   const [message, setMessage] =
     useState("");
 
-  const [solutionIndex, setSolutionIndex] =
-    useState(0);
-
   useEffect(() => {
     const stored =
       sessionStorage.getItem(
@@ -192,14 +189,6 @@ export default function PuzzlePage() {
     );
   }
 
-  function showNextSolutionMove() {
-    setSolutionIndex((current) =>
-      Math.min(
-        current + 1,
-        currentPuzzle.solutionLine.length - 1
-      )
-    );
-  }
 
   const solutionVisible =
     solved || revealed;
@@ -363,20 +352,15 @@ export default function PuzzlePage() {
                 0 && (
                 <div className="rounded-[28px] border border-[#e4e2db] bg-white p-6 shadow-sm">
                   <p className="text-xs font-black uppercase tracking-wide text-violet-600">
-                    See why
+                    Coach move
                   </p>
 
                   <h3 className="mt-2 text-2xl font-black">
-                    Follow the position
+                    The stronger choice
                   </h3>
 
                   <div className="mt-5 space-y-3">
-                    {puzzle.solutionLine
-                      .slice(
-                        0,
-                        solutionIndex + 1
-                      )
-                      .map(
+                    {puzzle.solutionLine.map(
                         (
                           move,
                           index
@@ -397,32 +381,12 @@ export default function PuzzlePage() {
                       )}
                   </div>
 
-                  {solutionIndex <
-                    puzzle.solutionLine
-                      .length -
-                      1 && (
-                    <button
-                      type="button"
-                      onClick={
-                        showNextSolutionMove
-                      }
-                      className="mt-5 w-full rounded-xl bg-violet-600 px-4 py-3 text-sm font-black text-white hover:bg-violet-700"
-                    >
-                      Show next move
-                    </button>
-                  )}
-
-                  {solutionIndex >=
-                    puzzle.solutionLine
-                      .length -
-                      1 && (
-                    <p className="mt-5 text-sm leading-6 text-zinc-500">
-                      This short sequence shows
-                      how the recommended move
-                      changes the position and why
-                      it was stronger.
-                    </p>
-                  )}
+                  <p className="mt-5 text-sm leading-6 text-zinc-500">
+                    This is the move Stockfish identified
+                    as the strongest choice in this position.
+                    Compare it with the move you played and
+                    read the coach explanation above.
+                  </p>
                 </div>
               )}
             </>
