@@ -22,6 +22,12 @@ export interface MoveEvaluation {
   fen: string;
   fenBefore: string;
 
+  /**
+   * Stockfish principal variation from the position
+   * before this move was played.
+   */
+  principalVariation?: string[];
+
   explanation: string;
 }
 

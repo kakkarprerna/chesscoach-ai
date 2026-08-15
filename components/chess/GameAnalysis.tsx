@@ -198,11 +198,11 @@ export default function GameAnalysis({
         </div>
 
         <h2 className="text-3xl font-black tracking-tight text-zinc-900 sm:text-4xl">
-          Let&apos;s see what you learned!
+          Let's see what you learned!
         </h2>
 
         <p className="mt-3 max-w-2xl text-base leading-7 text-zinc-600 sm:text-lg">
-          We&apos;ll look through your game and find a few
+          We'll look through your game and find a few
           moments that can help you become a stronger player.
         </p>
       </div>
@@ -219,7 +219,7 @@ export default function GameAnalysis({
           </h3>
 
           <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-zinc-500">
-            We&apos;ll find the biggest moments in your game
+            We'll find the biggest moments in your game
             and explain them in simple chess language.
           </p>
 
@@ -290,7 +290,7 @@ export default function GameAnalysis({
                 {coachStage === "attempt"
                   ? "Your turn — what would you play?"
                   : coachStage === "reveal"
-                    ? "Here&apos;s what the coach sees"
+                    ? "Here's what the coach sees"
                     : "What would you play here?"}
               </h3>
 
@@ -299,7 +299,7 @@ export default function GameAnalysis({
                   ? "Make a move on the board. There is no penalty for getting it wrong."
                   : coachStage === "reveal"
                     ? "Compare your idea with the move suggested by the coach."
-                    : "Take a moment to look at the board before checking the coach&apos;s suggestion."}
+                    : "Take a moment to look at the board before checking the coach's suggestion."}
               </p>
             </div>
 
@@ -343,7 +343,7 @@ export default function GameAnalysis({
                 onClick={startAttempt}
                 className="mt-5 w-full rounded-2xl bg-violet-600 px-5 py-4 text-base font-black text-white shadow-lg shadow-violet-200 transition hover:bg-violet-500"
               >
-                I&apos;ll try the position →
+                I'll try the position →
               </button>
             </div>
           )}
@@ -378,7 +378,7 @@ export default function GameAnalysis({
                     </p>
 
                     <p className="mt-1 text-sm leading-6 text-zinc-600">
-                      You found the coach&apos;s suggested move.
+                      You found the coach's suggested move.
                     </p>
                   </>
                 ) : (
@@ -392,7 +392,7 @@ export default function GameAnalysis({
                       <span className="font-bold">
                         {attemptMove}
                       </span>
-                      . Let&apos;s compare it with the coach&apos;s
+                      . Let's compare it with the coach's
                       idea.
                     </p>
                   </>
@@ -414,7 +414,7 @@ export default function GameAnalysis({
                     onClick={revealCoachIdea}
                     className="rounded-2xl bg-violet-600 px-5 py-3.5 text-sm font-black text-white transition hover:bg-violet-500"
                   >
-                    Show coach&apos;s idea →
+                    Show coach's idea →
                   </button>
                 </div>
               )}
@@ -479,7 +479,7 @@ export default function GameAnalysis({
               </p>
 
               <h3 className="mt-1 text-2xl font-black text-zinc-900">
-                Here&apos;s what stood out
+                Here's what stood out
               </h3>
             </div>
 
@@ -526,7 +526,7 @@ export default function GameAnalysis({
 
               <p className="mt-2 text-base text-zinc-500">
                 Choose a moment and try the position yourself
-                before seeing the coach&apos;s idea.
+                before seeing the coach's idea.
               </p>
             </div>
 
@@ -539,7 +539,7 @@ export default function GameAnalysis({
                 </h4>
 
                 <p className="mt-2 text-base leading-7 text-zinc-600">
-                  We didn&apos;t find any major mistakes at
+                  We didn't find any major mistakes at
                   this analysis depth.
                 </p>
               </div>
@@ -584,7 +584,7 @@ export default function GameAnalysis({
 
                           <p className="mt-1 text-sm leading-6 text-zinc-600">
                             Try the position yourself before
-                            revealing the coach&apos;s idea.
+                            revealing the coach's idea.
                           </p>
                         </div>
 

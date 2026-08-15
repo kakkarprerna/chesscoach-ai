@@ -120,31 +120,24 @@ export default function PuzzlePage() {
 
       const bestMoveGame = new Chess(position);
 
-      let bestMoveFrom: string | null = null;
-      let bestMoveTo: string | null = null;
-      let bestMovePromotion: string | null = null;
+      let isCorrectMove = false;
 
       try {
         const bestMove = bestMoveGame.move(
           currentPuzzle.bestMove
         );
 
-        bestMoveFrom = bestMove.from;
-        bestMoveTo = bestMove.to;
-        bestMovePromotion =
-          bestMove.promotion ?? null;
+        const playedPromotion =
+          move.promotion ?? null;
+
+        isCorrectMove =
+          bestMove.from === move.from &&
+          bestMove.to === move.to &&
+          (bestMove.promotion ?? null) ===
+            playedPromotion;
       } catch {
-        // If the stored SAN cannot be replayed,
-        // fall back to the generated SAN below.
+        isCorrectMove = false;
       }
-
-      const playedPromotion =
-        move.promotion ?? null;
-
-      const isCorrectMove =
-        bestMoveFrom === move.from &&
-        bestMoveTo === move.to &&
-        bestMovePromotion === playedPromotion;
 
       const nextAttempts =
         attempts + 1;
@@ -173,10 +166,6 @@ export default function PuzzlePage() {
       );
 
       setPosition(currentPuzzle.fen);
-
-      if (nextAttempts >= 3) {
-        setRevealed(true);
-      }
 
       return true;
     } catch {
@@ -374,40 +363,48 @@ export default function PuzzlePage() {
                 0 && (
                 <div className="rounded-[28px] border border-[#e4e2db] bg-white p-6 shadow-sm">
                   <p className="text-xs font-black uppercase tracking-wide text-violet-600">
-                    Coach move
+                    Coach continuation
                   </p>
 
                   <h3 className="mt-2 text-2xl font-black">
-                    The stronger choice
+                    What happens next
                   </h3>
 
                   <div className="mt-5 space-y-3">
                     {puzzle.solutionLine.map(
-                        (
-                          move,
-                          index
-                        ) => (
-                          <div
-                            key={`${move}-${index}`}
-                            className="flex items-center gap-3 rounded-2xl bg-[#f7f5ef] p-4"
-                          >
-                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-100 text-xs font-black text-violet-700">
-                              {index + 1}
-                            </span>
+                      (move, index) => (
+                        <div
+                          key={`${move}-${index}`}
+                          className="flex items-center gap-3 rounded-2xl bg-[#f7f5ef] p-4"
+                        >
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-black text-violet-700">
+                            {index + 1}
+                          </span>
+
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-wide text-zinc-400">
+                              {index === 0
+                                ? "Your stronger move"
+                                : index % 2 === 1
+                                  ? "Opponent response"
+                                  : "Your continuation"}
+                            </p>
 
                             <span className="text-lg font-black">
                               {move}
                             </span>
                           </div>
-                        )
-                      )}
+                        </div>
+                      )
+                    )}
                   </div>
 
                   <p className="mt-5 text-sm leading-6 text-zinc-500">
-                    This is the move Stockfish identified
-                    as the strongest choice in this position.
-                    Compare it with the move you played and
-                    read the coach explanation above.
+                    This continuation comes from
+                    Stockfish's principal variation starting
+                    from the puzzle position. The first move
+                    is the key answer; the following moves
+                    show how the position can continue.
                   </p>
                 </div>
               )}

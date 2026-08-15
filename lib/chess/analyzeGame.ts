@@ -240,6 +240,8 @@ export async function analyzeGame(
       classification,
       fen: positionAfter,
       fenBefore: positionBefore,
+      principalVariation:
+        beforeAnalysis.principalVariation ?? [],
       explanation,
     });
 

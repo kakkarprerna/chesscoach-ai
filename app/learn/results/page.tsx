@@ -118,8 +118,8 @@ export default function LearningResultsPage() {
         </section>
 
         {/* Patterns */}
-        <section className="mt-8">
-          <div className="mb-4">
+        <section className="mt-10 h-[520px] overflow-hidden rounded-3xl border border-zinc-100 bg-white shadow-sm">
+          <div className="sticky top-0 z-10 mb-4 border-b border-zinc-100 bg-white px-6 pb-4 pt-6">
             <p className="text-sm font-black uppercase tracking-wide text-violet-600">
               Patterns
             </p>
@@ -133,7 +133,8 @@ export default function LearningResultsPage() {
             </p>
           </div>
 
-          {analysis.patterns.length === 0 ? (
+          <div className="h-[calc(100%-105px)] overflow-y-auto px-6 pb-6">
+            {analysis.patterns.length === 0 ? (
             <div className="rounded-3xl bg-emerald-50 p-6">
               <h4 className="text-xl font-black text-zinc-900">
                 Great start!
@@ -145,7 +146,7 @@ export default function LearningResultsPage() {
               </p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-4 pr-1">
               {analysis.patterns.map(
                 (pattern) => (
                   <div
@@ -177,11 +178,12 @@ export default function LearningResultsPage() {
                 )
               )}
             </div>
-          )}
+            )}
+          </div>
         </section>
 
         {/* Puzzles */}
-        <section className="mt-10">
+        <section className="mt-10 max-h-[650px] overflow-y-auto rounded-3xl border border-zinc-100 bg-white p-6 shadow-sm">
           <div className="mb-4">
             <p className="text-sm font-black uppercase tracking-wide text-violet-600">
               Practice puzzles
@@ -260,6 +262,28 @@ export default function LearningResultsPage() {
 
                             <p className="mt-1 text-sm font-bold leading-6 text-violet-700">
                               Find a stronger move from this position.
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4">
+                            <p className="text-xs font-black uppercase tracking-wide text-amber-700">
+                              Why it matters
+                            </p>
+
+                            <p className="mt-2 text-sm font-semibold leading-6 text-amber-950">
+                              {puzzle.whyItMatters}
+                            </p>
+                          </div>
+
+                          <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+                            <p className="text-xs font-black uppercase tracking-wide text-emerald-700">
+                              Coaching lesson
+                            </p>
+
+                            <p className="mt-2 text-sm font-semibold leading-6 text-emerald-950">
+                              {puzzle.coachingLesson}
                             </p>
                           </div>
                         </div>

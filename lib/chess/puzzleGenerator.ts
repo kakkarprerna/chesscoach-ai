@@ -1,5 +1,10 @@
-import { MoveEvaluation } from "@/lib/chess/moveEvaluation";
-import { PuzzleCandidate } from "@/lib/chess/learningTypes";
+import { Chess } from "chess.js";
+import {
+  MoveEvaluation,
+} from "@/lib/chess/moveEvaluation";
+import {
+  PuzzleCandidate,
+} from "@/lib/chess/learningTypes";
 
 type PuzzleClassification =
   | "inaccuracy"
@@ -30,6 +35,34 @@ function getPuzzleClassification(
   }
 
   return move.classification;
+}
+
+function uciToSan(
+  fen: string,
+  uciMove: string
+): string {
+  if (!uciMove || uciMove.length < 4) {
+    return uciMove;
+  }
+
+  try {
+    const game = new Chess(fen);
+
+    const move = game.move({
+      from: uciMove.slice(0, 2),
+      to: uciMove.slice(2, 4),
+      promotion: uciMove[4] as
+        | "q"
+        | "r"
+        | "b"
+        | "n"
+        | undefined,
+    });
+
+    return move.san;
+  } catch {
+    return uciMove;
+  }
 }
 
 function getPuzzleQuestion(
@@ -80,29 +113,86 @@ function getCoachingLesson(
 }
 
 /**
- * Build a short continuation from the moves that
- * actually followed this position in the game.
+ * Convert a Stockfish principal variation from UCI
+ * coordinates into SAN moves.
  *
- * We include the coach's recommended move first,
- * followed by up to three subsequent game moves.
+ * Each move is played on the temporary board before
+ * converting the next move, so captures, checks,
+ * promotions and disambiguation are handled correctly.
+ */
+function principalVariationToSan(
+  fen: string,
+  principalVariation: string[]
+): string[] {
+  if (
+    !fen ||
+    principalVariation.length === 0
+  ) {
+    return [];
+  }
+
+  try {
+    const game = new Chess(fen);
+    const sanMoves: string[] = [];
+
+    for (
+      const uciMove of principalVariation
+    ) {
+      if (!uciMove || uciMove.length < 4) {
+        break;
+      }
+
+      const move = game.move({
+        from: uciMove.slice(0, 2),
+        to: uciMove.slice(2, 4),
+        promotion: uciMove[4] as
+          | "q"
+          | "r"
+          | "b"
+          | "n"
+          | undefined,
+      });
+
+      if (!move) {
+        break;
+      }
+
+      sanMoves.push(move.san);
+    }
+
+    return sanMoves;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Build a short engine continuation.
  *
- * This gives the learner a concrete 3–4 move sequence
- * without inventing engine variations.
+ * The principal variation comes directly from
+ * Stockfish at the puzzle position. We deliberately
+ * avoid using the game's original continuation because
+ * it may no longer be relevant after the recommended
+ * move is played.
  */
 function buildSolutionLine(
-  moves: MoveEvaluation[],
   puzzleMove: MoveEvaluation
 ): string[] {
-  // The stored best move is the only move we can
-  // currently guarantee is part of the engine solution.
-  //
-  // Do not append the game's actual continuation here:
-  // after the player chooses a different move, those
-  // subsequent moves may no longer be legal or relevant
-  // after the recommended move.
-  return puzzleMove.bestMove
-    ? [puzzleMove.bestMove]
-    : [];
+  const rawLine =
+    puzzleMove.principalVariation ?? [];
+
+  const sanLine =
+    principalVariationToSan(
+      puzzleMove.fenBefore,
+      rawLine
+    );
+
+  /*
+   * Keep the coaching experience focused.
+   * The first move is the answer; the following
+   * moves show the immediate engine continuation.
+   */
+  return sanLine.slice(0, 5);
 }
 
 export function generatePuzzleCandidates(
@@ -124,10 +214,10 @@ export function generatePuzzleCandidates(
       moveNumber: move.moveNumber,
       color: move.color,
 
-      // Puzzle starts before the mistake.
       fen: move.fenBefore,
 
       playedMove: move.move,
+
       bestMove: move.bestMove,
 
       classification:
@@ -158,10 +248,7 @@ export function generatePuzzleCandidates(
         ),
 
       solutionLine:
-        buildSolutionLine(
-          moves,
-          move
-        ),
+        buildSolutionLine(move),
     })
   );
 }
