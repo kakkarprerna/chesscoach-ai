@@ -126,8 +126,8 @@ export async function analyzeGame(
       blackInaccuracies: 0,
 
       puzzles: [],
-      patterns: [],
-    };
+    patterns: [],
+  };
   }
 
   const analysisGame = new Chess();

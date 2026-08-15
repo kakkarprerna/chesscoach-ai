@@ -10,10 +10,10 @@ type PatternSignal =
   | "quiet-position"
   | "forcing-attack"
   | "missed-check"
-  | "late-reaction"
-  | "passive-decision"
   | "missed-capture"
-  | "missed-threat";
+  | "missed-threat"
+  | "late-reaction"
+  | "passive-decision";
 
 interface SignalEvidence {
   signals: PatternSignal[];
@@ -26,8 +26,6 @@ interface PatternDefinition {
   description: string;
   lesson: string;
   severity: GamePattern["severity"];
-  minimumEvidence: number;
-  minimumGames: number;
   matches: (evidence: SignalEvidence) => boolean;
 }
 
@@ -132,46 +130,52 @@ function getKingPressure(
 function weakensKing(move: MoveEvaluation): boolean {
   const text = move.move.toLowerCase();
 
-  if (!/^[a-h][1-8][a-h][1-8]/.test(text)) {
+  /*
+   * SAN pawn moves that alter the kingside structure.
+   *
+   * Examples:
+   *   g3, h3, f3
+   *   g4, h4, f4
+   *   ...g6, ...h6, ...f6
+   *   ...g5, ...h5, ...f5
+   */
+  const pawnMove =
+    /^[a-h][1-8]$/.test(text) ||
+    /^[a-h][1-8][+#]$/.test(text);
+
+  if (!pawnMove) {
     return false;
   }
 
-  const from = text.slice(0, 2);
-  const to = text.slice(2, 4);
-
-  const kingSideSquares = [
-    "f2",
-    "g2",
-    "h2",
+  return [
     "f3",
     "g3",
     "h3",
-    "f7",
-    "g7",
-    "h7",
+    "f4",
+    "g4",
+    "h4",
+    "f5",
+    "g5",
+    "h5",
     "f6",
     "g6",
     "h6",
-  ];
-
-  return (
-    kingSideSquares.includes(from) ||
-    kingSideSquares.includes(to)
-  );
+  ].some((square) => text.startsWith(square));
 }
 
 function isForcingMove(move: MoveEvaluation): boolean {
-  const text = move.move;
-
   return (
-    text.includes("+") ||
-    text.includes("#") ||
-    text.includes("x")
+    move.move.includes("+") ||
+    move.move.includes("#") ||
+    move.move.includes("x")
   );
 }
 
 function isMissedCheck(move: MoveEvaluation): boolean {
-  return move.bestMove.includes("+") || move.bestMove.includes("#");
+  return (
+    move.bestMove.includes("+") ||
+    move.bestMove.includes("#")
+  );
 }
 
 function isMissedCapture(move: MoveEvaluation): boolean {
@@ -179,12 +183,9 @@ function isMissedCapture(move: MoveEvaluation): boolean {
 }
 
 function isDirectThreat(move: MoveEvaluation): boolean {
-  const bestMove = move.bestMove;
-
   return (
-    bestMove.includes("+") ||
-    bestMove.includes("#") ||
-    bestMove.includes("x")
+    isMissedCheck(move) ||
+    isMissedCapture(move)
   );
 }
 
@@ -233,13 +234,9 @@ function buildSignals(
   }
 
   /*
-   * A late reaction means:
-   * - the player made a meaningful error
-   * - there was no forcing move in their choice
-   * - the position contained an identifiable threat
-   *
-   * This is deliberately stricter than simply looking
-   * at evaluation loss.
+   * A meaningful error made while the opponent has
+   * concrete pressure is stronger evidence of a
+   * reaction problem than evaluation loss alone.
    */
   if (
     move.evaluationLoss >= 0.75 &&
@@ -250,12 +247,9 @@ function buildSignals(
   }
 
   /*
-   * Quiet-position evidence is only useful when there
-   * is a real strategic alternative available.
-   *
-   * We use the principal variation rather than treating
-   * every inaccurate quiet move as a piece-improvement
-   * problem.
+   * Quiet-position evidence requires an actual engine
+   * continuation. This prevents every inaccurate move
+   * in a quiet position from becoming "poor planning."
    */
   if (
     quiet &&
@@ -266,18 +260,11 @@ function buildSignals(
     signals.push("piece-improvement");
   }
 
-  /*
-   * Passive decision:
-   * a quiet position where the engine found a forcing
-   * continuation that the player did not choose.
-   */
   if (
     quiet &&
     move.evaluationLoss >= 0.75 &&
     !isForcingMove(move) &&
-    (isMissedCheck(move) ||
-      isMissedCapture(move) ||
-      isDirectThreat(move))
+    isDirectThreat(move)
   ) {
     signals.push("passive-decision");
   }
@@ -294,12 +281,10 @@ const PATTERNS: PatternDefinition[] = [
     title:
       "You don't consistently identify the opponent's plan first",
     description:
-      "In several games, your inaccurate moves came after the opponent had already created concrete pressure or a threat.",
+      "Your inaccurate decisions sometimes came after the opponent had already created concrete pressure or a threat.",
     lesson:
       "Before choosing your move, ask: What changed after my opponent's last move, and what are they threatening next?",
     severity: "high",
-    minimumEvidence: 4,
-    minimumGames: 4,
     matches: ({ signals }) =>
       signals.includes("opponent-plan") &&
       signals.includes("late-reaction"),
@@ -310,12 +295,10 @@ const PATTERNS: PatternDefinition[] = [
     title:
       "You react to king attacks too late",
     description:
-      "Your mistakes repeatedly occurred when two or more enemy attacking moves were already available around your king.",
+      "Your inaccurate decisions sometimes occurred when multiple enemy attacking moves were already available around your king.",
     lesson:
       "When pressure starts building around your king, make king safety part of your candidate-move search before looking for your own attack.",
     severity: "high",
-    minimumEvidence: 4,
-    minimumGames: 4,
     matches: ({ signals }) =>
       signals.includes("king-pressure") &&
       signals.includes("late-reaction"),
@@ -326,12 +309,10 @@ const PATTERNS: PatternDefinition[] = [
     title:
       "You sometimes weaken your king with pawn moves",
     description:
-      "Several inaccurate decisions involved pawn moves on the kingside that were followed by a meaningful deterioration in the position.",
+      "Some inaccurate decisions involved kingside pawn moves that were followed by a meaningful deterioration in the position.",
     lesson:
       "Before moving a pawn near your king, check the squares, files, and diagonals that become weaker.",
     severity: "medium",
-    minimumEvidence: 4,
-    minimumGames: 4,
     matches: ({ signals }) =>
       signals.includes("king-pawn-weakening") &&
       signals.includes("late-reaction"),
@@ -342,12 +323,10 @@ const PATTERNS: PatternDefinition[] = [
     title:
       "You miss chances to improve your worst-placed piece",
     description:
-      "In several quiet positions, your move was inaccurate even though there was no immediate tactical crisis. These moments point toward piece placement and long-term improvement.",
+      "In quiet positions, some inaccurate moves came when the position called for improving a piece rather than forcing the game.",
     lesson:
       "When there is no forcing move, identify your worst-placed piece and ask where it belongs before making a pawn move or starting an attack.",
     severity: "medium",
-    minimumEvidence: 4,
-    minimumGames: 4,
     matches: ({ signals }) =>
       signals.includes("quiet-position") &&
       signals.includes("piece-improvement") &&
@@ -359,17 +338,16 @@ const PATTERNS: PatternDefinition[] = [
     title:
       "You need a clearer plan in quiet positions",
     description:
-      "You repeatedly lost some evaluation in positions without an immediate tactical crisis. The recurring issue is choosing a direction rather than finding a move.",
+      "Some inaccuracies happened without an immediate tactical crisis, suggesting that choosing a direction was harder than finding a move.",
     lesson:
-      "In a quiet position, ask three questions: Which side is better? What is my worst piece? What does my opponent want to improve next?",
+      "In a quiet position, ask: Which side is better? What is my worst piece? What does my opponent want to improve next?",
     severity: "medium",
-    minimumEvidence: 5,
-    minimumGames: 5,
     matches: ({ signals }) =>
       signals.includes("quiet-position") &&
       signals.includes("piece-improvement") &&
       !signals.includes("missed-check") &&
-      !signals.includes("missed-capture"),
+      !signals.includes("missed-capture") &&
+      !signals.includes("king-pressure"),
   },
 
   {
@@ -377,12 +355,10 @@ const PATTERNS: PatternDefinition[] = [
     title:
       "You sometimes choose passive moves when action is needed",
     description:
-      "Several quiet positions contained a stronger forcing continuation, but your move did not create enough pressure or counterplay.",
+      "Some quiet positions contained a stronger forcing continuation, but your move did not create enough pressure or counterplay.",
     lesson:
       "When your opponent is improving, look for a concrete way to create a threat, gain space, exchange an important piece, or change the character of the position.",
     severity: "medium",
-    minimumEvidence: 4,
-    minimumGames: 4,
     matches: ({ signals }) =>
       signals.includes("passive-decision"),
   },
@@ -392,12 +368,10 @@ const PATTERNS: PatternDefinition[] = [
     title:
       "You see tactical ideas but miss stronger attacking continuations",
     description:
-      "Several positions contained a forcing check, capture, or direct threat that was stronger than the move you played.",
+      "Some positions contained a forcing check, capture, or direct threat that was stronger than the move you played.",
     lesson:
       "Before taking material or making a quiet move, scan checks, forcing captures, and direct threats in that order.",
     severity: "medium",
-    minimumEvidence: 4,
-    minimumGames: 4,
     matches: ({ signals }) =>
       signals.includes("missed-check") &&
       signals.includes("forcing-attack"),
@@ -408,12 +382,10 @@ const PATTERNS: PatternDefinition[] = [
     title:
       "You often react one move after the position changes",
     description:
-      "Across multiple games, meaningful errors appeared after your opponent had already created a concrete threat.",
+      "Some meaningful errors appeared after the opponent had already created a concrete threat.",
     lesson:
       "Make a habit of reassessing the opponent's last move before continuing with your own plan.",
     severity: "high",
-    minimumEvidence: 4,
-    minimumGames: 4,
     matches: ({ signals }) =>
       signals.includes("late-reaction"),
   },
@@ -437,26 +409,30 @@ export function detectGamePatterns(
       evidence.filter(pattern.matches);
 
     /*
-     * Do not let one game dominate the pattern count.
+     * This function analyzes ONE game.
      *
-     * MoveEvaluation currently does not contain a game ID,
-     * so within one analyzed game we count at most two
-     * pieces of evidence toward a pattern.
+     * We only need one or two supporting moments here.
+     * Recurrence across multiple games is handled by
+     * learningAnalysis.ts.
      */
-    const cappedCount = Math.min(
+    if (matchingEvidence.length === 0) {
+      continue;
+    }
+
+    /*
+     * Avoid letting one game contribute dozens of
+     * nearly identical moments.
+     */
+    const count = Math.min(
       matchingEvidence.length,
       2
     );
-
-    if (cappedCount < pattern.minimumEvidence) {
-      continue;
-    }
 
     patterns.push({
       id: pattern.id,
       title: pattern.title,
       description: pattern.description,
-      count: cappedCount,
+      count,
       severity: pattern.severity,
     });
   }

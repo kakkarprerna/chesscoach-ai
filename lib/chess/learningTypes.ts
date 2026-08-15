@@ -15,10 +15,24 @@ export interface PuzzleCandidate {
   solutionLine: string[];
 }
 
+export interface PatternReferencePosition {
+  gameId: string;
+  gameLabel: string;
+  gameDate: string;
+  moveNumber: number;
+  color: "white" | "black";
+  fen: string;
+  playedMove: string;
+  bestMove: string;
+  evaluationLoss: number;
+  classification: "inaccuracy" | "mistake" | "blunder";
+}
+
 export interface GamePattern {
   id: string;
   title: string;
   description: string;
   count: number;
   severity: "low" | "medium" | "high";
+  referencePositions?: PatternReferencePosition[];
 }
