@@ -9,6 +9,8 @@ export interface PuzzleCandidate {
   evaluationLoss: number;
   question: string;
   explanation: string;
+  coachingLesson: string;
+  whyItMatters: string;
 
   solutionLine: string[];
 }

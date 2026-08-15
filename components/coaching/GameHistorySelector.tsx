@@ -108,8 +108,9 @@ export default function GameHistorySelector({
         </p>
       </div>
 
-      <div className="mt-5 grid gap-3">
-        {games.map((game, index) => {
+      <div className="mt-5 max-h-[560px] overflow-y-auto rounded-2xl pr-1">
+        <div className="grid gap-3">
+          {games.map((game, index) => {
           const selected = selectedGameIds.includes(game.id);
 
           return (
@@ -175,8 +176,9 @@ export default function GameHistorySelector({
                 </div>
               </div>
             </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </section>
   );

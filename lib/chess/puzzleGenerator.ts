@@ -46,6 +46,39 @@ function getPuzzleQuestion(
   return "Can you find a slightly better move?";
 }
 
+function getWhyItMatters(
+  classification: PuzzleClassification,
+  playedMove: string,
+  bestMove: string,
+  evaluationLoss: number
+): string {
+  if (classification === "blunder") {
+    return `${playedMove} caused a significant drop in position quality. The stronger ${bestMove} was worth finding because the difference was about ${evaluationLoss.toFixed(
+      1
+    )} evaluation points.`;
+  }
+
+  if (classification === "mistake") {
+    return `${playedMove} noticeably reduced the quality of your position. Finding ${bestMove} would have kept more of the position's potential.`;
+  }
+
+  return `${playedMove} was playable, but ${bestMove} was more precise and preserved more of the position's potential.`;
+}
+
+function getCoachingLesson(
+  classification: PuzzleClassification
+): string {
+  if (classification === "blunder") {
+    return "Before committing to a move, slow down and check your opponent's forcing responses: checks, captures, and threats.";
+  }
+
+  if (classification === "mistake") {
+    return "When a position feels playable, compare your first idea with your opponent's strongest response before committing.";
+  }
+
+  return "When you have a choice between several playable moves, look for the move that is most active, precise, and resilient to your opponent's reply.";
+}
+
 /**
  * Build a short continuation from the moves that
  * actually followed this position in the game.
@@ -110,6 +143,19 @@ export function generatePuzzleCandidates(
 
       explanation:
         move.explanation,
+
+      whyItMatters:
+        getWhyItMatters(
+          getPuzzleClassification(move),
+          move.move,
+          move.bestMove,
+          move.evaluationLoss
+        ),
+
+      coachingLesson:
+        getCoachingLesson(
+          getPuzzleClassification(move)
+        ),
 
       solutionLine:
         buildSolutionLine(

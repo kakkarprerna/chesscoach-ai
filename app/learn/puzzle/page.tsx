@@ -16,6 +16,8 @@ interface PuzzleData {
   evaluationLoss: number;
   question: string;
   explanation: string;
+  coachingLesson: string;
+  whyItMatters: string;
   gameLabel: string;
   gameDate: string;
   solutionLine: string[];
@@ -346,6 +348,26 @@ export default function PuzzlePage() {
                 <p className="mt-3 text-base leading-7 text-violet-900/80">
                   {puzzle.explanation}
                 </p>
+
+                <div className="mt-5 rounded-2xl bg-white/70 p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-violet-600">
+                    Why it matters
+                  </p>
+
+                  <p className="mt-2 text-sm leading-6 text-zinc-700">
+                    {puzzle.whyItMatters}
+                  </p>
+                </div>
+
+                <div className="mt-3 rounded-2xl border border-violet-200 bg-violet-100/70 p-4">
+                  <p className="text-xs font-black uppercase tracking-wide text-violet-700">
+                    Coach lesson
+                  </p>
+
+                  <p className="mt-2 text-sm font-semibold leading-6 text-violet-900">
+                    {puzzle.coachingLesson}
+                  </p>
+                </div>
               </div>
 
               {puzzle.solutionLine.length >
