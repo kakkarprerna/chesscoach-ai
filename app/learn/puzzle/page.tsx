@@ -66,6 +66,25 @@ export default function PuzzlePage() {
     }
   }, [router]);
 
+  function goBack() {
+    const origin =
+      sessionStorage.getItem(
+        "chesscoach-puzzle-origin"
+      );
+
+    if (origin === "patterns") {
+      router.push("/learn/results?section=patterns");
+      return;
+    }
+
+    if (origin === "puzzles") {
+      router.push("/learn/results?section=puzzles");
+      return;
+    }
+
+    router.push("/learn/results");
+  }
+
   if (!puzzle || !position) {
     return (
       <main className="min-h-screen bg-[#f7f7f4]">
@@ -150,6 +169,47 @@ export default function PuzzlePage() {
           "Excellent. You found the coach's move."
         );
         setPosition(currentGame.fen());
+
+        const activePuzzleId =
+          sessionStorage.getItem(
+            "chesscoach-active-puzzle-id"
+          ) ?? currentPuzzle.id;
+
+        const storedCompleted =
+          sessionStorage.getItem(
+            "chesscoach-completed-puzzles"
+          );
+
+        let completedPuzzles: string[] = [];
+
+        try {
+          const parsed = storedCompleted
+            ? JSON.parse(storedCompleted)
+            : [];
+
+          if (Array.isArray(parsed)) {
+            completedPuzzles = parsed.filter(
+              (value): value is string =>
+                typeof value === "string"
+            );
+          }
+        } catch {
+          completedPuzzles = [];
+        }
+
+        if (
+          !completedPuzzles.includes(
+            activePuzzleId
+          )
+        ) {
+          completedPuzzles.push(activePuzzleId);
+
+          sessionStorage.setItem(
+            "chesscoach-completed-puzzles",
+            JSON.stringify(completedPuzzles)
+          );
+        }
+
         return true;
       }
 
@@ -173,8 +233,47 @@ export default function PuzzlePage() {
     }
   }
 
+  function markPuzzleCompleted() {
+    const activePuzzleId =
+      sessionStorage.getItem(
+        "chesscoach-active-puzzle-id"
+      ) ?? currentPuzzle.id;
+
+    const storedCompleted =
+      sessionStorage.getItem(
+        "chesscoach-completed-puzzles"
+      );
+
+    let completedPuzzles: string[] = [];
+
+    try {
+      const parsed = storedCompleted
+        ? JSON.parse(storedCompleted)
+        : [];
+
+      if (Array.isArray(parsed)) {
+        completedPuzzles = parsed.filter(
+          (value): value is string =>
+            typeof value === "string"
+        );
+      }
+    } catch {
+      completedPuzzles = [];
+    }
+
+    if (!completedPuzzles.includes(activePuzzleId)) {
+      completedPuzzles.push(activePuzzleId);
+
+      sessionStorage.setItem(
+        "chesscoach-completed-puzzles",
+        JSON.stringify(completedPuzzles)
+      );
+    }
+  }
+
   function revealSolution() {
     setRevealed(true);
+    markPuzzleCompleted();
     setMessage(
       "Here's the move your coach recommends."
     );
@@ -200,12 +299,10 @@ export default function PuzzlePage() {
 
           <button
             type="button"
-            onClick={() =>
-              router.push("/learn")
-            }
+            onClick={goBack}
             className="rounded-xl border border-[#dedcd5] bg-white px-4 py-2.5 text-sm font-bold text-zinc-600 hover:bg-violet-50 hover:text-violet-700"
           >
-            Back to Learning Coach
+            ← Back to Learning Results
           </button>
         </div>
       </header>
@@ -408,6 +505,16 @@ export default function PuzzlePage() {
                   </p>
                 </div>
               )}
+
+              <button
+                type="button"
+                onClick={goBack}
+                className="w-full rounded-2xl bg-violet-600 px-5 py-4 text-sm font-black text-white shadow-sm transition hover:bg-violet-500"
+              >
+                {solved
+                  ? "Puzzle complete — Back to Learning Results →"
+                  : "Back to Learning Results →"}
+              </button>
             </>
           )}
         </aside>

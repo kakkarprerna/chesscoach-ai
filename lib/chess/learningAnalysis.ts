@@ -93,6 +93,9 @@ export async function analyzeLearningGames(
         }
       );
 
+    /*
+     * Collect puzzles from this game.
+     */
     for (const puzzle of gameResult.puzzles) {
       allPuzzles.push({
         ...puzzle,
@@ -104,14 +107,71 @@ export async function analyzeLearningGames(
     }
 
     /*
-     * A pattern is counted once per game for recurrence
-     * purposes, while reference positions come directly
-     * from the detector's evidence for that pattern.
+     * Build a lookup of the patterns detected in this game.
+     *
+     * patternEvidence contains the actual MoveEvaluation
+     * that supports each pattern. This is what we use to
+     * create real reference positions for the learner.
+     */
+    const evidenceByPattern = new Map<
+      string,
+      PatternReferencePosition[]
+    >();
+
+    for (const evidence of gameResult.patternEvidence) {
+      const move = evidence.move;
+
+      /*
+       * Only error moves can be useful reference positions.
+       * This also keeps the type aligned with
+       * PatternReferencePosition.
+       */
+      if (
+        move.classification !== "inaccuracy" &&
+        move.classification !== "mistake" &&
+        move.classification !== "blunder"
+      ) {
+        continue;
+      }
+
+      const referencePosition: PatternReferencePosition = {
+        gameId: game.id,
+        gameLabel: `${game.white} vs ${game.black}`,
+        gameDate: game.date,
+        moveNumber: move.moveNumber,
+        color: move.color,
+        fen: move.fenBefore,
+        playedMove: move.move,
+        bestMove: move.bestMove,
+        evaluationLoss: move.evaluationLoss,
+        classification: move.classification,
+      };
+
+      const existing =
+        evidenceByPattern.get(
+          evidence.patternId
+        );
+
+      if (existing) {
+        existing.push(referencePosition);
+      } else {
+        evidenceByPattern.set(
+          evidence.patternId,
+          [referencePosition]
+        );
+      }
+    }
+
+    /*
+     * Merge this game's detected patterns into the
+     * cross-game pattern map.
      */
     for (const pattern of gameResult.patterns) {
+      const gameReferences =
+        evidenceByPattern.get(pattern.id) ?? [];
+
       const existing =
         patternMap.get(pattern.id);
-
 
       if (!existing) {
         patternMap.set(pattern.id, {
@@ -120,24 +180,46 @@ export async function analyzeLearningGames(
           gameCoverage:
             1 / games.length,
           gameIds: new Set([game.id]),
-          referencePositions: [],
+          referencePositions:
+            [...gameReferences]
+              .sort(
+                (a, b) =>
+                  b.evaluationLoss -
+                  a.evaluationLoss
+              )
+              .slice(0, 1),
         });
 
         continue;
       }
 
+      /*
+       * Raw count can accumulate across games.
+       */
       existing.count += pattern.count;
 
+      /*
+       * A game contributes only once to recurrence.
+       */
       if (!existing.gameIds.has(game.id)) {
         existing.gameIds.add(game.id);
 
         /*
-         * Keep at most one representative position
-         * from each game. This guarantees that the final
-         * examples demonstrate recurrence across games.
+         * Keep the strongest representative position
+         * from this newly recurring game.
          */
-        // Reference positions will be populated once
-        // pattern-specific evidence is exposed by the detector.
+        const strongestGameReference =
+          [...gameReferences].sort(
+            (a, b) =>
+              b.evaluationLoss -
+              a.evaluationLoss
+          )[0];
+
+        if (strongestGameReference) {
+          existing.referencePositions.push(
+            strongestGameReference
+          );
+        }
       }
 
       existing.gameCount =
@@ -147,6 +229,10 @@ export async function analyzeLearningGames(
         existing.gameCount /
         games.length;
 
+      /*
+       * Preserve the strongest severity seen across
+       * all games.
+       */
       if (
         severityRank(pattern.severity) >
         severityRank(existing.severity)
@@ -154,14 +240,12 @@ export async function analyzeLearningGames(
         existing.severity =
           pattern.severity;
       }
-
-      /*
-       * Reference positions are intentionally left empty
-       * until pattern-specific evidence is available.
-       */    }
-
+    }
   }
 
+  /*
+   * Keep the strongest learning puzzles overall.
+   */
   const puzzles = allPuzzles
     .sort(
       (a, b) =>
@@ -172,13 +256,13 @@ export async function analyzeLearningGames(
 
   /*
    * A recurring learning pattern should appear
-   * across multiple games, not just multiple moves.
+   * across multiple games, not merely multiple moves.
    *
-   * For small study sets:
+   * Small study sets:
    *   2+ games = recurring
    *
-   * For larger study sets:
-   *   roughly 20%+ of games = recurring
+   * Larger study sets:
+   *   approximately 20%+ of games = recurring
    */
   const minimumRecurringGames =
     games.length <= 5
@@ -220,7 +304,6 @@ export async function analyzeLearningGames(
     .sort((a, b) => {
       /*
        * First prioritize recurrence across games.
-       * This is more meaningful than raw move count.
        */
       if (
         b.gameCoverage !==
@@ -233,8 +316,7 @@ export async function analyzeLearningGames(
       }
 
       /*
-       * If recurrence is similar, prioritize
-       * severity.
+       * Then prioritize severity.
        */
       if (
         severityRank(b.severity) !==

@@ -391,6 +391,53 @@ const PATTERNS: PatternDefinition[] = [
   },
 ];
 
+export interface PatternEvidence {
+  patternId: string;
+  move: MoveEvaluation;
+}
+
+export function detectGamePatternEvidence(
+  moves: MoveEvaluation[]
+): PatternEvidence[] {
+  if (moves.length === 0) {
+    return [];
+  }
+
+  const evidence = moves
+    .filter(isError)
+    .map(buildSignals);
+
+  const results: PatternEvidence[] = [];
+
+  for (const pattern of PATTERNS) {
+    const matchingEvidence =
+      evidence.filter(pattern.matches);
+
+    /*
+     * Keep the strongest two examples from this game
+     * for each pattern. Cross-game recurrence is handled
+     * by learningAnalysis.ts.
+     */
+    const strongestEvidence =
+      matchingEvidence
+        .sort(
+          (a, b) =>
+            b.move.evaluationLoss -
+            a.move.evaluationLoss
+        )
+        .slice(0, 2);
+
+    for (const item of strongestEvidence) {
+      results.push({
+        patternId: pattern.id,
+        move: item.move,
+      });
+    }
+  }
+
+  return results;
+}
+
 export function detectGamePatterns(
   moves: MoveEvaluation[]
 ): GamePattern[] {

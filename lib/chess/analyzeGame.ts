@@ -17,7 +17,10 @@ import {
   GamePattern,
 } from "@/lib/chess/learningTypes";
 import { generatePuzzleCandidates } from "@/lib/chess/puzzleGenerator";
-import { detectGamePatterns } from "@/lib/chess/patternDetector";
+import {
+  detectGamePatterns,
+  detectGamePatternEvidence,
+} from "@/lib/chess/patternDetector";
 
 function evaluationToWhitePerspective(
   analysis: EngineEvaluation
@@ -95,6 +98,11 @@ export interface GameAnalysisResult {
   puzzles: PuzzleCandidate[];
 
   patterns: GamePattern[];
+
+  patternEvidence: {
+    patternId: string;
+    move: MoveEvaluation;
+  }[];
 }
 
 export async function analyzeGame(
@@ -126,7 +134,8 @@ export async function analyzeGame(
       blackInaccuracies: 0,
 
       puzzles: [],
-    patterns: [],
+      patterns: [],
+      patternEvidence: [],
   };
   }
 
@@ -266,6 +275,9 @@ export async function analyzeGame(
   const patterns =
     detectGamePatterns(results);
 
+  const patternEvidence =
+    detectGamePatternEvidence(results);
+
   return {
     moves: results,
 
@@ -309,5 +321,6 @@ export async function analyzeGame(
 
     puzzles,
     patterns,
+    patternEvidence,
   };
 }
