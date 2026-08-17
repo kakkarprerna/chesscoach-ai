@@ -1,5 +1,7 @@
 "use client";
 
+import SignOutButton from "@/components/auth/SignOutButton";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import PGNImporter from "@/components/pgn/PGNImporter";
@@ -205,6 +207,7 @@ export default function AnalyzePage() {
               Import another game
             </button>
           )}
+            <SignOutButton />
           </div>
         </div>
       </header>

@@ -1,5 +1,7 @@
 "use client";
 
+import SignOutButton from "@/components/auth/SignOutButton";
+
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -288,6 +290,7 @@ function LearningResultsContent() {
             >
               Study other games
             </button>
+            <SignOutButton />
           </div>
         </div>
       </header>

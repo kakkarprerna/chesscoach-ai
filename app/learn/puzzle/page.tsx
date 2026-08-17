@@ -1,5 +1,7 @@
 "use client";
 
+import SignOutButton from "@/components/auth/SignOutButton";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Chess } from "chess.js";
@@ -297,13 +299,17 @@ export default function PuzzlePage() {
             </h1>
           </div>
 
-          <button
-            type="button"
-            onClick={goBack}
-            className="rounded-xl border border-[#dedcd5] bg-white px-4 py-2.5 text-sm font-bold text-zinc-600 hover:bg-violet-50 hover:text-violet-700"
-          >
-            ← Back to Learning Results
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={goBack}
+              className="rounded-xl border border-[#dedcd5] bg-white px-4 py-2.5 text-sm font-bold text-zinc-600 hover:bg-violet-50 hover:text-violet-700"
+            >
+              ← Back to Learning Results
+            </button>
+
+            <SignOutButton />
+          </div>
         </div>
       </header>
 

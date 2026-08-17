@@ -1,5 +1,7 @@
 "use client";
 
+import SignOutButton from "@/components/auth/SignOutButton";
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -235,6 +237,7 @@ export default function GamesPage() {
             >
               + Import games
             </button>
+            <SignOutButton />
           </div>
         </div>
       </header>

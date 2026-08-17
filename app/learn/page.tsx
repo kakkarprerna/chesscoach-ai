@@ -1,11 +1,12 @@
 "use client";
 
+import SignOutButton from "@/components/auth/SignOutButton";
+
 import { useRouter } from "next/navigation";
 import LearningHub from "@/components/coaching/LearningHub";
 
 export default function LearnPage() {
   const router = useRouter();
-
   return (
     <main className="min-h-screen bg-[#f7f7f4] text-zinc-900">
       <header className="sticky top-0 z-30 border-b border-[#e8e6df] bg-[#fdfdfb]/95 backdrop-blur">
@@ -36,6 +37,9 @@ export default function LearnPage() {
             >
               Analyze a game
             </button>
+
+            <SignOutButton />
+
           </div>
         </div>
       </header>

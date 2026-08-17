@@ -284,61 +284,105 @@ const openingData: Record<string, OpeningStudyData> = {
   },
 };
 
+const openingByEco: Record<string, string> = {
+  C60: "Ruy Lopez",
+  C50: "Italian Game",
+  B20: "Sicilian Defense",
+  C00: "French Defense",
+  B10: "Caro-Kann Defense",
+};
+
+function resolveOpening(
+  opening: string,
+  eco?: string
+): OpeningStudyData | null {
+  const normalizedOpening = opening?.trim();
+
+  if (
+    normalizedOpening &&
+    normalizedOpening !== "Unknown opening" &&
+    openingData[normalizedOpening]
+  ) {
+    return openingData[normalizedOpening];
+  }
+
+  if (eco) {
+    const ecoOpening = openingByEco[eco.trim().toUpperCase()];
+
+    if (ecoOpening) {
+      return openingData[ecoOpening];
+    }
+  }
+
+  return null;
+}
+
 export default function OpeningStudy({
   opening,
   variation,
   eco,
 }: OpeningStudyProps) {
-  const data = openingData[opening];
+  const data = resolveOpening(opening, eco);
 
   if (!data) {
     return (
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
-        <p className="text-sm uppercase tracking-wider text-violet-500">
-          Opening study
+      <section className="rounded-2xl border border-[#e4e2db] bg-white p-6 shadow-sm">
+        <p className="text-sm font-black uppercase tracking-[0.14em] text-violet-600">
+          Opening Study
         </p>
 
-        <h2 className="mt-2 text-2xl font-semibold">
+        <h2 className="mt-3 text-2xl font-black tracking-tight text-zinc-900">
           Opening not yet identified
         </h2>
 
-        <p className="mt-3 text-sm text-zinc-400">
-          We haven't identified this opening yet. More opening coverage will
-          be added as the ChessCoach knowledge base grows.
+        <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600">
+          We could not match this game to one of the openings currently
+          covered by ChessCoach. More opening coverage will be added as the
+          knowledge base grows.
         </p>
+
+        {eco && eco !== "—" && (
+          <div className="mt-5 inline-flex rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1.5 text-xs font-bold text-zinc-600">
+            ECO {eco}
+          </div>
+        )}
       </section>
     );
   }
 
   return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-6">
+    <section className="rounded-2xl border border-[#e4e2db] bg-white p-6 shadow-sm">
       <div>
-        <p className="text-sm uppercase tracking-wider text-violet-500">
-          Opening study
+        <p className="text-sm font-black uppercase tracking-[0.14em] text-violet-600">
+          Opening Study
         </p>
 
-       <div className="mt-3 flex flex-wrap gap-2">
-  {variation && variation !== "—" && (
-    <span className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-300">
-      {variation}
-    </span>
-  )}
+        <h2 className="mt-2 text-2xl font-black tracking-tight text-zinc-900">
+          {data.name}
+        </h2>
 
-  {eco && eco !== "—" && (
-    <span className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-500">
-      ECO {eco}
-    </span>
-  )}
-</div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {variation && variation !== "—" && (
+            <span className="rounded-full border border-zinc-200 bg-zinc-50 px-3 py-1 text-xs font-bold text-zinc-600">
+              {variation}
+            </span>
+          )}
 
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-400">
+          {eco && eco !== "—" && (
+            <span className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-bold text-violet-700">
+              ECO {eco}
+            </span>
+          )}
+        </div>
+
+        <p className="mt-4 max-w-3xl text-sm leading-6 text-zinc-600">
           {data.description}
         </p>
       </div>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-2">
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
-          <h3 className="font-semibold">
+      <div className="mt-8 grid gap-5 md:grid-cols-2">
+        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+          <h3 className="font-black text-zinc-900">
             Key ideas
           </h3>
 
@@ -346,7 +390,7 @@ export default function OpeningStudy({
             {data.keyIdeas.map((idea) => (
               <li
                 key={idea}
-                className="flex gap-3 text-sm leading-5 text-zinc-300"
+                className="flex gap-3 text-sm leading-5 text-zinc-700"
               >
                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />
                 <span>{idea}</span>
@@ -355,8 +399,8 @@ export default function OpeningStudy({
           </ul>
         </div>
 
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
-          <h3 className="font-semibold">
+        <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+          <h3 className="font-black text-zinc-900">
             Typical plans
           </h3>
 
@@ -364,7 +408,7 @@ export default function OpeningStudy({
             {data.typicalPlans.map((plan) => (
               <li
                 key={plan}
-                className="flex gap-3 text-sm leading-5 text-zinc-300"
+                className="flex gap-3 text-sm leading-5 text-zinc-700"
               >
                 <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />
                 <span>{plan}</span>
@@ -374,8 +418,8 @@ export default function OpeningStudy({
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-amber-900/40 bg-amber-950/10 p-5">
-        <h3 className="font-semibold">
+      <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+        <h3 className="font-black text-amber-950">
           Common mistakes to watch for
         </h3>
 
@@ -383,9 +427,9 @@ export default function OpeningStudy({
           {data.commonMistakes.map((mistake) => (
             <li
               key={mistake}
-              className="flex gap-3 text-sm leading-5 text-zinc-300"
+              className="flex gap-3 text-sm leading-5 text-amber-900"
             >
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
               <span>{mistake}</span>
             </li>
           ))}
@@ -393,15 +437,13 @@ export default function OpeningStudy({
       </div>
 
       <div className="mt-8">
-        <div>
-          <p className="text-sm uppercase tracking-wider text-violet-500">
-            Study resources
-          </p>
+        <p className="text-sm font-black uppercase tracking-[0.14em] text-violet-600">
+          Study resources
+        </p>
 
-          <h3 className="mt-2 text-xl font-semibold">
-            Learn this opening
-          </h3>
-        </div>
+        <h3 className="mt-2 text-xl font-black text-zinc-900">
+          Learn this opening
+        </h3>
 
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           {data.resources.map((resource) => (
@@ -410,23 +452,23 @@ export default function OpeningStudy({
               href={resource.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group rounded-xl border border-zinc-800 bg-zinc-950 p-5 transition hover:border-zinc-600"
+              className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-violet-200 hover:bg-violet-50/40"
             >
               <div className="flex items-start justify-between gap-4">
-                <span className="rounded-full border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400">
+                <span className="rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-xs font-bold text-zinc-600">
                   {resource.type}
                 </span>
 
-                <span className="text-zinc-600 transition group-hover:text-zinc-300">
+                <span className="text-zinc-400 transition group-hover:text-violet-600">
                   ↗
                 </span>
               </div>
 
-              <h4 className="mt-4 font-medium text-zinc-100">
+              <h4 className="mt-4 font-black text-zinc-900">
                 {resource.title}
               </h4>
 
-              <p className="mt-2 text-sm leading-5 text-zinc-500">
+              <p className="mt-2 text-sm leading-5 text-zinc-600">
                 {resource.description}
               </p>
             </a>
