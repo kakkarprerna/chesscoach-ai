@@ -11,11 +11,17 @@ export default function Home() {
           </Link>
 
           <nav className="hidden items-center gap-8 text-sm text-zinc-400 md:flex">
+            <Link href="/puzzles" className="transition hover:text-white">
+              Puzzles
+            </Link>
+            <Link href="/learn" className="transition hover:text-white">
+              Learn
+            </Link>
+            <Link href="/games" className="transition hover:text-white">
+              My games
+            </Link>
             <a href="#how-it-works" className="transition hover:text-white">
               How it works
-            </a>
-            <a href="#features" className="transition hover:text-white">
-              Features
             </a>
           </nav>
 
