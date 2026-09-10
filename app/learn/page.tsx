@@ -24,6 +24,13 @@ export default function LearnPage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => router.push("/puzzles")}
+              className="rounded-xl border border-[#dedcd5] bg-white px-4 py-2.5 text-sm font-bold text-zinc-600 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
+            >
+              Endgame drills
+            </button>
+            <button
+              type="button"
               onClick={() => router.push("/games")}
               className="rounded-xl border border-[#dedcd5] bg-white px-4 py-2.5 text-sm font-bold text-zinc-600 shadow-sm transition hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700"
             >
